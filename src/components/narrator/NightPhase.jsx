@@ -23,12 +23,18 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
       return
     }
     
-    setGameState({
-      ...gameState,
-      wolfTarget: selectedVictim
-    })
+    console.log('🐺 Confirmando víctima:', selectedVictim)
+    console.log('🐺 Estado actual:', gameState)
     
-    goToNextStep()
+    // Actualizar estado y avanzar en una sola operación
+    const newState = {
+      ...gameState,
+      wolfTarget: selectedVictim,
+      currentStep: gameState.currentStep + 1
+    }
+    
+    console.log('🐺 Nuevo estado:', newState)
+    setGameState(newState)
   }
   
   const handleInvestigate = () => {
@@ -48,7 +54,11 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
   }
   
   const handleContinueAfterSeer = () => {
-    goToNextStep()
+    // Avanzar preservando todos los datos acumulados
+    setGameState({
+      ...gameState,
+      currentStep: gameState.currentStep + 1
+    })
   }
   
   const handleProtect = () => {
@@ -57,30 +67,40 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
       return
     }
     
+    // Actualizar estado y avanzar en una sola operación
     setGameState({
       ...gameState,
-      doctorTarget: selectedProtect
+      doctorTarget: selectedProtect,
+      currentStep: gameState.currentStep + 1
     })
-    
-    goToNextStep()
   }
   
   const handleProcessNight = () => {
+    console.log('☀️ Procesando noche...')
+    console.log('☀️ gameState completo:', gameState)
+    console.log('☀️ wolfTarget:', gameState.wolfTarget)
+    console.log('☀️ doctorTarget:', gameState.doctorTarget)
+    
     // Determinar quién muere
     const deaths = []
     
     if (gameState.wolfTarget) {
       // Verificar si el doctor salvó a la víctima
       if (gameState.doctorTarget && gameState.wolfTarget === gameState.doctorTarget) {
+        console.log('☀️ El doctor salvó a la víctima')
         // Nadie muere, el doctor salvó a la víctima
       } else {
+        console.log('☀️ La víctima morirá:', gameState.wolfTarget)
         deaths.push({
           playerId: gameState.wolfTarget,
           cause: 'wolves'
         })
       }
+    } else {
+      console.log('☀️ No hay wolfTarget, nadie morirá')
     }
     
+    console.log('☀️ Deaths array:', deaths)
     onNightEnd(deaths)
   }
   
@@ -151,7 +171,10 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
             </label>
             <select
               value={selectedVictim || ''}
-              onChange={(e) => setSelectedVictim(e.target.value)}
+              onChange={(e) => {
+                console.log('🐺 Lobo selecciona:', e.target.value)
+                setSelectedVictim(e.target.value)
+              }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 mb-4"
             >
               <option value="">-- Seleccionar --</option>
@@ -163,11 +186,21 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
                   </option>
                 ))}
             </select>
+            
+            {selectedVictim && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 font-medium">
+                  ✓ Víctima seleccionada: <strong>{players.find(p => p.id === selectedVictim)?.name}</strong>
+                </p>
+              </div>
+            )}
+            
             <button
               onClick={handleSelectVictim}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              disabled={!selectedVictim}
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-colors"
             >
-              Confirmar víctima →
+              {selectedVictim ? '✓ Confirmar y Continuar →' : '⚠️ Selecciona una víctima'}
             </button>
           </div>
         )}
@@ -284,12 +317,18 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
                 {gameState.wolfTarget ? (
                   <div className="bg-red-100 p-3 rounded-lg border border-red-300">
                     <p className="text-red-900 font-medium">
-                      🐺 Lobos atacaron a: <strong>{players.find(p => p.id === gameState.wolfTarget)?.name}</strong>
+                      🐺 Lobos atacaron a: <strong>{players.find(p => p.id === gameState.wolfTarget)?.name || `ID: ${gameState.wolfTarget}`}</strong>
+                    </p>
+                    <p className="text-xs text-red-600 mt-1">
+                      Debug: wolfTarget = {gameState.wolfTarget}
                     </p>
                   </div>
                 ) : (
-                  <div className="bg-gray-100 p-3 rounded-lg border border-gray-300">
-                    <p className="text-gray-600">⚠️ Los lobos no seleccionaron víctima</p>
+                  <div className="bg-red-100 p-3 rounded-lg border-2 border-red-400">
+                    <p className="text-red-700 font-bold">⚠️ Los lobos no seleccionaron víctima</p>
+                    <p className="text-xs text-red-600 mt-1">
+                      Debug: wolfTarget = {String(gameState.wolfTarget)} (tipo: {typeof gameState.wolfTarget})
+                    </p>
                   </div>
                 )}
                 
