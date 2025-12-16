@@ -97,6 +97,21 @@ function Player() {
     }
   }
 
+  const handleLeaveRoom = () => {
+    // Limpiar localStorage
+    localStorage.removeItem('player_data')
+    
+    // Resetear estado
+    setRoomCode('')
+    setPlayerName('')
+    setRoomId(null)
+    setPlayerId(null)
+    setPlayerRole(null)
+    setAllPlayers([])
+    setScreen('join')
+    setRoleVisible(false)
+  }
+
   const handleJoin = async (e) => {
     e.preventDefault()
     setError('')
@@ -230,14 +245,21 @@ function Player() {
           <p className="text-xl text-gray-600 mb-6">
             Esperando que el narrador inicie el juego
           </p>
-          <div className="inline-flex items-center space-x-2 bg-green-100 px-4 py-2 rounded-full">
+          <div className="inline-flex items-center space-x-2 bg-green-100 px-4 py-2 rounded-full mb-6">
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-green-700 font-medium">Conectado</span>
           </div>
           
-          <p className="text-sm text-gray-500 mt-8">
+          <p className="text-sm text-gray-500 mb-6">
             Se actualizará automáticamente cuando te asignen un rol
           </p>
+
+          <button
+            onClick={handleLeaveRoom}
+            className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+          >
+            🚪 Salir de la Sala
+          </button>
         </div>
       </div>
     )
@@ -324,9 +346,18 @@ function Player() {
             )}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-            <p className="text-xs text-gray-500">Sala: {roomCode}</p>
-            <p className="text-xs text-gray-500 mt-1">Jugador: {playerName}</p>
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="text-center mb-4">
+              <p className="text-xs text-gray-500">Sala: {roomCode}</p>
+              <p className="text-xs text-gray-500 mt-1">Jugador: {playerName}</p>
+            </div>
+            
+            <button
+              onClick={handleLeaveRoom}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+            >
+              🚪 Salir de la Sala
+            </button>
           </div>
         </div>
       </div>
