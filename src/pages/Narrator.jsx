@@ -171,25 +171,43 @@ function Narrator() {
   }
 
   const setSheriff = async (playerId) => {
-    if (!playerId) return
+    if (!roomId) {
+      alert('Error: No hay sala activa')
+      return
+    }
     
     try {
-      // Quitar sheriff de todos
-      await supabase
+      // Quitar sheriff de todos primero
+      const { error: removeError } = await supabase
         .from('players')
         .update({ is_sheriff: false })
         .eq('room_id', roomId)
       
-      // Asignar sheriff al seleccionado
-      await supabase
-        .from('players')
-        .update({ is_sheriff: true })
-        .eq('id', playerId)
+      if (removeError) throw removeError
       
+      // Si se seleccionó un jugador, asignarlo como sheriff
+      if (playerId && playerId !== '') {
+        const { error: assignError } = await supabase
+          .from('players')
+          .update({ is_sheriff: true })
+          .eq('id', playerId)
+        
+        if (assignError) throw assignError
+      }
+      
+      // Recargar jugadores para ver el cambio
       await fetchPlayers()
+      
+      // Actualizar estado local inmediatamente
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => ({
+          ...p,
+          is_sheriff: p.id === playerId
+        }))
+      )
     } catch (error) {
       console.error('Error setting sheriff:', error)
-      alert('Error al asignar Sheriff')
+      alert('Error al asignar Sheriff: ' + error.message)
     }
   }
 
