@@ -1,5 +1,28 @@
 # 📝 CHANGELOG
 
+## [1.3.1] - 2025-12-16
+
+### 🧹 Maintenance & Cleanup
+- **Auto-limpieza de Salas**: Las salas se eliminan automáticamente al crear nueva partida
+  - Cuando el narrador hace clic en "Nueva Partida Completa", la sala se borra de Supabase
+  - Evita acumulación de salas "zombies" en la base de datos
+  - Mantiene la BD limpia y eficiente
+
+### 📚 Documentation
+- **SUPABASE_CLEANUP.sql**: Script completo de limpieza
+  - Limpieza manual de salas viejas
+  - Función automática de cleanup
+  - Políticas recomendadas por estado de sala
+  - Opciones: manual, función, GitHub Actions
+  
+- **MANEJO_SALAS_INACTIVAS.md**: Guía completa de mantenimiento
+  - Cómo y cuándo limpiar salas
+  - Políticas recomendadas (setup: 2h, playing: 6h, finished: 12h)
+  - Monitoreo y estadísticas
+  - Setup de limpieza automática
+
+---
+
 ## [1.3.0] - 2025-12-16
 
 ### 🎉 New Features
