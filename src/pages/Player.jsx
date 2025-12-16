@@ -15,6 +15,7 @@ function Player() {
   const [playerRole, setPlayerRole] = useState(null)
   const [allPlayers, setAllPlayers] = useState([])
   const [error, setError] = useState('')
+  const [roleVisible, setRoleVisible] = useState(false)
 
   // Cargar desde localStorage si existe
   useEffect(() => {
@@ -258,46 +259,69 @@ function Player() {
     }
     
     return (
-      <div className={`min-h-screen bg-gradient-to-br ${roleColors[playerRole]} flex items-center justify-center p-4`}>
+      <div className={`min-h-screen bg-gradient-to-br ${roleVisible ? roleColors[playerRole] : 'from-gray-700 to-gray-900'} flex items-center justify-center p-4 transition-all duration-300`}>
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-700 mb-6">Tu Rol</h2>
             
-            <div className="text-9xl mb-6">
-              {roleInfo.emoji}
-            </div>
-            
-            <h1 className="text-5xl font-bold text-gray-800 mb-4">
-              {roleInfo.name.toUpperCase()}
-            </h1>
-            
-            <div className="bg-gray-50 rounded-xl p-6 mb-6">
-              <p className="text-gray-700 text-lg leading-relaxed">
-                {roleInfo.description}
-              </p>
-            </div>
+            {!roleVisible ? (
+              // Estado oculto - Tap para revelar
+              <button
+                onClick={() => setRoleVisible(true)}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-12 px-8 rounded-2xl text-2xl transition-all transform hover:scale-105 shadow-2xl active:scale-95"
+              >
+                <div className="text-6xl mb-4">👁️</div>
+                <p className="text-xl">Toca para revelar tu rol</p>
+                <p className="text-sm mt-3 opacity-80">Asegúrate de que nadie esté mirando</p>
+              </button>
+            ) : (
+              // Estado visible - Mostrando el rol
+              <>
+                <div className="text-9xl mb-6 animate-fade-in">
+                  {roleInfo.emoji}
+                </div>
+                
+                <h1 className="text-5xl font-bold text-gray-800 mb-4 animate-fade-in">
+                  {roleInfo.name.toUpperCase()}
+                </h1>
+                
+                <div className="bg-gray-50 rounded-xl p-6 mb-6 animate-fade-in">
+                  <p className="text-gray-700 text-lg leading-relaxed">
+                    {roleInfo.description}
+                  </p>
+                </div>
 
-            {/* Mostrar compañeros lobos */}
-            {playerRole === 'wolf' && teammates.length > 0 && (
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-6">
-                <h3 className="font-bold text-red-900 mb-3 text-lg">
-                  🐺 Otros Lobos:
-                </h3>
-                <ul className="space-y-2">
-                  {teammates.map(teammate => (
-                    <li key={teammate.id} className="text-red-800 font-medium text-lg">
-                      • {teammate.name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                {/* Mostrar compañeros lobos */}
+                {playerRole === 'wolf' && teammates.length > 0 && (
+                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-6 animate-fade-in">
+                    <h3 className="font-bold text-red-900 mb-3 text-lg">
+                      🐺 Otros Lobos:
+                    </h3>
+                    <ul className="space-y-2">
+                      {teammates.map(teammate => (
+                        <li key={teammate.id} className="text-red-800 font-medium text-lg">
+                          • {teammate.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Botón para ocultar */}
+                <button
+                  onClick={() => setRoleVisible(false)}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-4"
+                >
+                  🔒 Ocultar Rol
+                </button>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-blue-800 text-sm">
+                    💡 Puedes ocultar y revelar tu rol cuando lo necesites
+                  </p>
+                </div>
+              </>
             )}
-
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <p className="text-blue-800 text-sm">
-                💡 Mantén el celular a mano como referencia durante el juego
-              </p>
-            </div>
           </div>
 
           <div className="mt-6 pt-6 border-t border-gray-200 text-center">
