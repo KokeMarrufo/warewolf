@@ -13,6 +13,7 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
   const [showNightHunterRevenge, setShowNightHunterRevenge] = useState(!!pendingHunterRevenge)
   const [showSheriffSelection, setShowSheriffSelection] = useState(false)
   const [newSheriffId, setNewSheriffId] = useState('')
+  const [hunterVictimAnnouncement, setHunterVictimAnnouncement] = useState(null)
   
   const sheriff = alivePlayers.find(p => p.is_sheriff)
   
@@ -150,11 +151,16 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
       return
     }
     
+    const victim = alivePlayers.find(p => p.id === revengeTarget)
     onExecutePlayer(revengeTarget, 'hunter')
     
+    // Mostrar anuncio de la víctima del cazador
+    setHunterVictimAnnouncement(victim?.name)
+    
     setTimeout(() => {
+      setHunterVictimAnnouncement(null)
       onDayEnd()
-    }, 2000)
+    }, 3000)
   }
   
   const handleNightHunterRevenge = () => {
@@ -163,15 +169,44 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
       return
     }
     
+    const victim = alivePlayers.find(p => p.id === revengeTarget)
     console.log('🏹 Cazador de noche mata a:', revengeTarget)
     onExecutePlayer(revengeTarget, 'hunter')
     
+    // Mostrar anuncio de la víctima del cazador
+    setHunterVictimAnnouncement(victim?.name)
+    
     setTimeout(() => {
+      setHunterVictimAnnouncement(null)
       setShowNightHunterRevenge(false)
       if (onHunterRevengeComplete) {
         onHunterRevengeComplete()
       }
-    }, 2000)
+    }, 3000)
+  }
+  
+  // Anuncio de víctima del cazador
+  if (hunterVictimAnnouncement) {
+    return (
+      <div className="bg-white rounded-2xl shadow-2xl p-6">
+        <div className="text-center">
+          <div className="bg-red-50 border-2 border-red-300 rounded-xl p-8 mb-4">
+            <div className="text-6xl mb-4">🏹</div>
+            <h2 className="text-3xl font-bold text-red-600 mb-4">VENGANZA DEL CAZADOR</h2>
+            <p className="text-2xl font-bold text-red-800 mb-2">
+              💀 {hunterVictimAnnouncement}
+            </p>
+            <p className="text-gray-600">
+              Ha sido eliminado por la venganza del cazador
+            </p>
+          </div>
+          
+          <div className="text-sm text-gray-500">
+            Continuando en 3 segundos...
+          </div>
+        </div>
+      </div>
+    )
   }
   
   // Popup de selección de nuevo Sheriff (si el sheriff murió)
