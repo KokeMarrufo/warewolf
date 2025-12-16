@@ -2,7 +2,27 @@ import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { getRoleInfo } from '../../utils/roles'
 
-function SetupView({ roomCode, players, onAddPlayer, onRemovePlayer, onAssignRoles, onSetSheriff, onStartGame, onBack }) {
+function SetupView({ 
+  roomCode, 
+  players, 
+  onAddPlayer, 
+  onRemovePlayer, 
+  onAssignRoles, 
+  onSetSheriff, 
+  onStartGame, 
+  onBack,
+  // Configuración editable
+  numWolves,
+  setNumWolves,
+  includeSeer,
+  setIncludeSeer,
+  includeWitch,
+  setIncludeWitch,
+  includeHunter,
+  setIncludeHunter,
+  includeGirl,
+  setIncludeGirl
+}) {
   const [newPlayerName, setNewPlayerName] = useState('')
   
   const playerUrl = `${window.location.origin}/jugador?code=${roomCode}`
@@ -129,7 +149,70 @@ function SetupView({ roomCode, players, onAddPlayer, onRemovePlayer, onAssignRol
 
           {/* Acciones */}
           <div className="bg-white rounded-2xl shadow-2xl p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Acciones</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Configuración y Acciones</h2>
+            
+            {/* Configuración de Roles */}
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-5 mb-4">
+              <h3 className="font-bold text-indigo-900 mb-4 text-lg">⚙️ Configuración de Roles</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Número de Lobos 🐺
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={numWolves}
+                    onChange={(e) => setNumWolves(parseInt(e.target.value))}
+                    className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg font-bold text-center"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={includeSeer}
+                      onChange={(e) => setIncludeSeer(e.target.checked)}
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <span className="text-gray-700 font-medium">Incluir Vidente 👁️</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={includeWitch}
+                      onChange={(e) => setIncludeWitch(e.target.checked)}
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <span className="text-gray-700 font-medium">Incluir Bruja 🧙‍♀️</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={includeHunter}
+                      onChange={(e) => setIncludeHunter(e.target.checked)}
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <span className="text-gray-700 font-medium">Incluir Cazador 🏹</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={includeGirl}
+                      onChange={(e) => setIncludeGirl(e.target.checked)}
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <span className="text-gray-700 font-medium">Incluir Niña 👧</span>
+                  </label>
+                </div>
+              </div>
+            </div>
             
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

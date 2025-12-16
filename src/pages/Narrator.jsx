@@ -466,6 +466,17 @@ function Narrator() {
         onSetSheriff={setSheriff}
         onStartGame={startGame}
         onBack={resetGame}
+        // Configuración editable
+        numWolves={numWolves}
+        setNumWolves={setNumWolves}
+        includeSeer={includeSeer}
+        setIncludeSeer={setIncludeSeer}
+        includeWitch={includeWitch}
+        setIncludeWitch={setIncludeWitch}
+        includeHunter={includeHunter}
+        setIncludeHunter={setIncludeHunter}
+        includeGirl={includeGirl}
+        setIncludeGirl={setIncludeGirl}
       />
     )
   }

@@ -49,6 +49,17 @@ function Player() {
     }
   }, [screen, playerId])
 
+  // Polling para detectar cambios de rol (cuando juegan otra ronda)
+  useEffect(() => {
+    if (screen === 'role' && playerId) {
+      const interval = setInterval(async () => {
+        await checkForRoleUpdate(playerId)
+      }, 3000)
+      
+      return () => clearInterval(interval)
+    }
+  }, [screen, playerId, playerRole])
+
   const checkForRole = async (pId) => {
     try {
       const { data, error } = await supabase
@@ -94,6 +105,56 @@ function Player() {
       }
     } catch (error) {
       console.error('Error checking role:', error)
+    }
+  }
+
+  const checkForRoleUpdate = async (pId) => {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*, room_id')
+        .eq('id', pId)
+        .single()
+      
+      if (error) throw error
+      
+      // Si el rol cambió, actualizar
+      if (data.role && data.role !== playerRole) {
+        console.log('🔄 Rol actualizado:', data.role)
+        setPlayerRole(data.role)
+        setRoleVisible(false) // Ocultar el rol para que lo revelen de nuevo
+        
+        // Actualizar otros jugadores si es lobo
+        if (data.role === 'wolf') {
+          const { data: players } = await supabase
+            .from('players')
+            .select('*')
+            .eq('room_id', data.room_id)
+          
+          setAllPlayers(players || [])
+        } else {
+          setAllPlayers([]) // Limpiar si ya no es lobo
+        }
+        
+        // Actualizar localStorage
+        localStorage.setItem('player_data', JSON.stringify({
+          roomCode,
+          playerName,
+          roomId: data.room_id,
+          playerId: pId,
+          playerRole: data.role
+        }))
+      }
+      
+      // Si el rol se borró (nueva ronda sin asignar), volver a waiting
+      if (!data.role) {
+        console.log('🔄 Rol removido, esperando nueva asignación')
+        setPlayerRole(null)
+        setRoleVisible(false)
+        setScreen('waiting')
+      }
+    } catch (error) {
+      console.error('Error checking role update:', error)
     }
   }
 
@@ -272,16 +333,9 @@ function Player() {
       ? allPlayers.filter(p => p.role === 'wolf' && p.id !== playerId)
       : []
     
-    const roleColors = {
-      wolf: 'from-red-600 to-red-800',
-      seer: 'from-blue-600 to-blue-800',
-      doctor: 'from-green-600 to-green-800',
-      hunter: 'from-orange-600 to-orange-800',
-      villager: 'from-gray-600 to-gray-800'
-    }
-    
+    // Fondo SIEMPRE igual para evitar reflejos en lentes
     return (
-      <div className={`min-h-screen bg-gradient-to-br ${roleVisible ? roleColors[playerRole] : 'from-gray-700 to-gray-900'} flex items-center justify-center p-4 transition-all duration-300`}>
+      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-700 mb-6">Tu Rol</h2>

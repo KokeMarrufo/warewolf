@@ -14,9 +14,13 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
   const sheriff = alivePlayers.find(p => p.is_sheriff)
   
   // Obtener las muertes de la noche anterior del historial
+  // Filtrar por ronda actual Y fase 'night' para obtener SOLO las muertes de esta noche
   const lastNightDeaths = gameState.history
-    .filter(e => e.type === 'wolves' || e.type === 'witch')
-    .slice(-2) // Últimas 2 muertes (puede haber lobo + bruja)
+    .filter(e => 
+      (e.type === 'wolves' || e.type === 'witch') && 
+      e.round === gameState.round && 
+      e.phase === 'night'
+    )
   
   const handleAnnouncement = () => {
     setDeathAnnounced(true)
