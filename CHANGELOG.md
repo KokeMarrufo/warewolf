@@ -1,5 +1,27 @@
 # 📝 CHANGELOG
 
+## [1.2.0] - 2025-12-16
+
+### 🎉 New Features
+- **Sheriff del Pueblo**: Nueva designación para desempatar votaciones
+  - El narrador designa manualmente al Sheriff en el setup (Paso 3)
+  - El Sheriff desempata las votaciones durante el día
+  - Si hay empate sin Sheriff, nadie es ejecutado
+  - Indicador visual ⭐ para el Sheriff en todas las vistas
+  - El Sheriff puede ser cualquier jugador (incluso Lobo)
+  - Añade estrategia y resuelve empates
+
+### 🗄️ Database Changes
+- Nuevo campo `is_sheriff` en la tabla `players`
+- Migración disponible en `SUPABASE_MIGRATION_SHERIFF.sql`
+
+### ✨ Improvements
+- Popup dedicado para decisión del Sheriff en empates
+- Mejor visualización de empates en votaciones
+- Mensajes claros cuando no hay Sheriff
+
+---
+
 ## [1.1.0] - 2025-12-16
 
 ### 🎉 New Features
