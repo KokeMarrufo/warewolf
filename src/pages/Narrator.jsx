@@ -261,7 +261,20 @@ function Narrator() {
     }
   }
 
-  const resetGame = () => {
+  const resetGame = async () => {
+    try {
+      // Eliminar sala de la base de datos (limpieza)
+      if (roomId) {
+        await supabase
+          .from('rooms')
+          .delete()
+          .eq('id', roomId)
+      }
+    } catch (error) {
+      console.error('Error deleting room:', error)
+    }
+    
+    // Limpiar estado local
     localStorage.removeItem('narrator_state')
     setRoomCode(null)
     setRoomId(null)
