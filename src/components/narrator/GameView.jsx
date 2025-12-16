@@ -197,6 +197,10 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {alivePlayers.map(player => {
                     const roleInfo = getRoleInfo(player.role)
+                    const partner = player.cupid_partner_id 
+                      ? players.find(p => p.id === player.cupid_partner_id)
+                      : null
+                    
                     return (
                       <div
                         key={player.id}
@@ -207,6 +211,9 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                             {player.is_sheriff && (
                               <span className="text-yellow-500" title="Sheriff">⭐</span>
                             )}
+                            {partner && (
+                              <span className="text-pink-500" title={`Flechado con ${partner.name}`}>💘</span>
+                            )}
                             <span className="font-medium text-gray-800">{player.name}</span>
                           </div>
                           <span className="text-xl">{roleInfo.emoji}</span>
@@ -214,6 +221,11 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                         <div className="text-xs text-gray-600 mt-1">
                           {roleInfo.name}
                           {player.is_sheriff && <span className="text-yellow-700 font-bold ml-2">• Sheriff</span>}
+                          {partner && (
+                            <span className="text-pink-700 font-bold ml-2">
+                              • 💘 {partner.name}
+                            </span>
+                          )}
                         </div>
                       </div>
                     )
@@ -228,17 +240,31 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {deadPlayers.map(player => {
                       const roleInfo = getRoleInfo(player.role)
+                      const partner = player.cupid_partner_id 
+                        ? players.find(p => p.id === player.cupid_partner_id)
+                        : null
+                      
                       return (
                         <div
                           key={player.id}
                           className="bg-gray-100 p-3 rounded-lg opacity-60"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-800 line-through">{player.name}</span>
+                            <div className="flex items-center space-x-2">
+                              {partner && (
+                                <span className="text-pink-400" title={`Estaba flechado con ${partner.name}`}>💘</span>
+                              )}
+                              <span className="font-medium text-gray-800 line-through">{player.name}</span>
+                            </div>
                             <span className="text-xl">{roleInfo.emoji}</span>
                           </div>
                           <div className="text-xs text-gray-600 mt-1">
                             {roleInfo.name}
+                            {partner && (
+                              <span className="text-pink-600 font-bold ml-2">
+                                • 💘 {partner.name}
+                              </span>
+                            )}
                           </div>
                         </div>
                       )
