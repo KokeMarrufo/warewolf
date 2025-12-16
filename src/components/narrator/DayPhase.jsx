@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getRoleInfo } from '../../utils/roles'
 
-function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd }) {
+function DayPhase({ players, alivePlayers, gameState, pendingHunterRevenge, onExecutePlayer, onDayEnd, onHunterRevengeComplete }) {
   const [deathAnnounced, setDeathAnnounced] = useState(false)
   const [votingStarted, setVotingStarted] = useState(false)
   const [votes, setVotes] = useState({})
@@ -10,6 +10,7 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
   const [tieBreak, setTieBreak] = useState(false)
   const [tiedPlayers, setTiedPlayers] = useState([])
   const [sheriffChoice, setSheriffChoice] = useState(null)
+  const [showNightHunterRevenge, setShowNightHunterRevenge] = useState(!!pendingHunterRevenge)
   
   const sheriff = alivePlayers.find(p => p.is_sheriff)
   
@@ -93,7 +94,7 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
     const mostVotedId = playersWithMaxVotes[0]
     const result = onExecutePlayer(mostVotedId)
     
-    if (result === 'hunter_revenge') {
+    if (result && result.type === 'hunter_revenge') {
       setHunterRevenge(true)
     } else {
       setTimeout(() => {
@@ -110,7 +111,7 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
     
     const result = onExecutePlayer(sheriffChoice)
     
-    if (result === 'hunter_revenge') {
+    if (result && result.type === 'hunter_revenge') {
       setTieBreak(false)
       setHunterRevenge(true)
     } else {
@@ -132,6 +133,82 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
     setTimeout(() => {
       onDayEnd()
     }, 2000)
+  }
+  
+  const handleNightHunterRevenge = () => {
+    if (!revengeTarget) {
+      alert('Selecciona el objetivo del cazador')
+      return
+    }
+    
+    console.log('🏹 Cazador de noche mata a:', revengeTarget)
+    onExecutePlayer(revengeTarget)
+    
+    setTimeout(() => {
+      setShowNightHunterRevenge(false)
+      if (onHunterRevengeComplete) {
+        onHunterRevengeComplete()
+      }
+    }, 2000)
+  }
+  
+  // Popup de venganza del cazador que murió de noche (PRIORIDAD)
+  if (showNightHunterRevenge && pendingHunterRevenge) {
+    return (
+      <div className="bg-white rounded-2xl shadow-2xl p-6">
+        <div className="text-center mb-6">
+          <div className="text-6xl mb-4">🏹</div>
+          <h2 className="text-3xl font-bold text-red-600 mb-2">¡CAZADOR ELIMINADO DURANTE LA NOCHE!</h2>
+          <p className="text-gray-600 text-lg">
+            <strong>{pendingHunterRevenge.hunterName}</strong> era el Cazador
+          </p>
+          <p className="text-gray-500 mt-2">
+            Murió durante la noche pero puede llevarse a alguien con él
+          </p>
+        </div>
+        
+        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4 mb-6">
+          <p className="text-orange-900 text-sm">
+            <strong>📋 Instrucciones para el Narrador:</strong>
+          </p>
+          <ol className="list-decimal list-inside text-orange-800 text-sm mt-2 space-y-1">
+            <li>Pregúntale al Cazador a quién quiere llevarse</li>
+            <li>Selecciona al jugador elegido abajo</li>
+            <li>Confirma la venganza</li>
+            <li>DESPUÉS anuncia las muertes de la noche</li>
+          </ol>
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <strong>El Cazador elige llevarse a:</strong>
+          </label>
+          <select
+            value={revengeTarget || ''}
+            onChange={(e) => setRevengeTarget(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 text-lg font-medium"
+          >
+            <option value="">-- Seleccionar jugador --</option>
+            {alivePlayers.map(player => {
+              const roleInfo = getRoleInfo(player.role)
+              return (
+                <option key={player.id} value={player.id}>
+                  {player.name} ({roleInfo.name})
+                </option>
+              )
+            })}
+          </select>
+        </div>
+        
+        <button
+          onClick={handleNightHunterRevenge}
+          disabled={!revengeTarget}
+          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-4 px-4 rounded-lg transition-colors text-lg"
+        >
+          💀 Confirmar Venganza del Cazador
+        </button>
+      </div>
+    )
   }
   
   // Popup de desempate del Sheriff

@@ -6,6 +6,7 @@ import DayPhase from './DayPhase'
 
 function GameView({ roomCode, players, setPlayers, gameState, setGameState, nightSteps, setNightSteps, onGameEnd, onExitGame }) {
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [pendingHunterRevenge, setPendingHunterRevenge] = useState(null) // Para cazador que muere de noche
   
   const alivePlayers = players.filter(p => p.is_alive)
   const deadPlayers = players.filter(p => !p.is_alive)
@@ -37,11 +38,24 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
     
     // Agregar al historial
     const player = players.find(p => p.id === playerId)
+    
+    // Mensaje según causa de muerte
+    let message
+    if (cause === 'wolves') {
+      message = `${player.name} ha muerto (lobos)`
+    } else if (cause === 'witch') {
+      message = `${player.name} ha muerto (bruja)`
+    } else if (cause === 'vote') {
+      message = `${player.name} ha muerto (votación)`
+    } else {
+      message = `${player.name} ha muerto`
+    }
+    
     const newHistory = [
       ...gameState.history,
       {
         type: cause,
-        message: `${player.name} ha muerto (${cause === 'wolves' ? 'lobos' : 'votación'})`,
+        message: message,
         round: gameState.round,
         phase: gameState.phase
       }
@@ -59,9 +73,13 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
       onGameEnd(winCondition)
     }
     
-    // Si era cazador, mostrar opción de venganza
+    // Si era cazador, devolver objeto con más info
     if (player.role === 'hunter') {
-      return 'hunter_revenge'
+      return { 
+        type: 'hunter_revenge',
+        hunterId: playerId,
+        hunterName: player.name
+      }
     }
     
     return null
@@ -216,10 +234,25 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 setGameState={setGameState}
                 nightSteps={nightSteps}
                 onNightEnd={(deaths) => {
-                  // Procesar muertes
+                  console.log('🌅 Procesando muertes nocturnas:', deaths)
+                  
+                  // Procesar muertes y detectar cazador
+                  let hunterRevengeData = null
+                  
                   deaths.forEach(death => {
-                    killPlayer(death.playerId, death.cause)
+                    const result = killPlayer(death.playerId, death.cause)
+                    
+                    // Si murió un cazador, guardar para el día
+                    if (result && result.type === 'hunter_revenge') {
+                      console.log('🏹 Cazador muerto de noche:', result)
+                      hunterRevengeData = result
+                    }
                   })
+                  
+                  // Si hubo cazador, guardarlo para mostrarlo al inicio del día
+                  if (hunterRevengeData) {
+                    setPendingHunterRevenge(hunterRevengeData)
+                  }
                   
                   // Cambiar a día
                   changePhase('day')
@@ -230,12 +263,17 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 players={players}
                 alivePlayers={alivePlayers}
                 gameState={gameState}
+                pendingHunterRevenge={pendingHunterRevenge}
                 onExecutePlayer={(playerId) => {
                   const result = killPlayer(playerId, 'vote')
                   return result
                 }}
                 onDayEnd={() => {
+                  setPendingHunterRevenge(null) // Limpiar venganza pendiente
                   changePhase('night')
+                }}
+                onHunterRevengeComplete={() => {
+                  setPendingHunterRevenge(null) // Limpiar después de venganza
                 }}
               />
             )}
