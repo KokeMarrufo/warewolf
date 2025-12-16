@@ -129,11 +129,17 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                         className="bg-green-50 p-3 rounded-lg"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-800">{player.name}</span>
+                          <div className="flex items-center space-x-2">
+                            {player.is_sheriff && (
+                              <span className="text-yellow-500" title="Sheriff">⭐</span>
+                            )}
+                            <span className="font-medium text-gray-800">{player.name}</span>
+                          </div>
                           <span className="text-xl">{roleInfo.emoji}</span>
                         </div>
                         <div className="text-xs text-gray-600 mt-1">
                           {roleInfo.name}
+                          {player.is_sheriff && <span className="text-yellow-700 font-bold ml-2">• Sheriff</span>}
                         </div>
                       </div>
                     )

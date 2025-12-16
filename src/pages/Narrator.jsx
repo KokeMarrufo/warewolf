@@ -170,6 +170,29 @@ function Narrator() {
     }
   }
 
+  const setSheriff = async (playerId) => {
+    if (!playerId) return
+    
+    try {
+      // Quitar sheriff de todos
+      await supabase
+        .from('players')
+        .update({ is_sheriff: false })
+        .eq('room_id', roomId)
+      
+      // Asignar sheriff al seleccionado
+      await supabase
+        .from('players')
+        .update({ is_sheriff: true })
+        .eq('id', playerId)
+      
+      await fetchPlayers()
+    } catch (error) {
+      console.error('Error setting sheriff:', error)
+      alert('Error al asignar Sheriff')
+    }
+  }
+
   const assignRolesToPlayers = async () => {
     if (players.length < numWolves + 2) {
       alert(`Se necesitan al menos ${numWolves + 2} jugadores`)
@@ -336,6 +359,7 @@ function Narrator() {
         onAddPlayer={addPlayerManually}
         onRemovePlayer={removePlayer}
         onAssignRoles={assignRolesToPlayers}
+        onSetSheriff={setSheriff}
         onStartGame={startGame}
         onBack={resetGame}
       />

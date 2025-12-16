@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS players (
   role TEXT, -- 'wolf', 'seer', 'doctor', 'hunter', 'villager'
   is_alive BOOLEAN DEFAULT true,
   role_opened BOOLEAN DEFAULT false,
+  is_sheriff BOOLEAN DEFAULT false, -- Sheriff del pueblo (desempata votos)
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(room_id, name)
 );

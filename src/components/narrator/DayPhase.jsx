@@ -6,6 +6,11 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
   const [votes, setVotes] = useState({})
   const [hunterRevenge, setHunterRevenge] = useState(false)
   const [revengeTarget, setRevengeTarget] = useState(null)
+  const [tieBreak, setTieBreak] = useState(false)
+  const [tiedPlayers, setTiedPlayers] = useState([])
+  const [sheriffChoice, setSheriffChoice] = useState(null)
+  
+  const sheriff = alivePlayers.find(p => p.is_sheriff)
   
   // Obtener las muertes de la noche anterior del historial
   const lastNightDeath = gameState.history
@@ -44,27 +49,68 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
   const handleExecute = () => {
     // Encontrar el jugador con más votos
     let maxVotes = 0
-    let mostVotedId = null
+    const voteCounts = {}
     
     Object.entries(votes).forEach(([playerId, voteCount]) => {
+      voteCounts[playerId] = voteCount
       if (voteCount > maxVotes) {
         maxVotes = voteCount
-        mostVotedId = playerId
       }
     })
     
-    if (!mostVotedId || maxVotes === 0) {
+    if (maxVotes === 0) {
       alert('No hay suficientes votos')
       return
     }
     
+    // Encontrar todos los jugadores con el máximo de votos (empate)
+    const playersWithMaxVotes = Object.entries(voteCounts)
+      .filter(([_, count]) => count === maxVotes)
+      .map(([playerId, _]) => playerId)
+    
+    // Si hay empate y hay sheriff vivo
+    if (playersWithMaxVotes.length > 1 && sheriff) {
+      setTiedPlayers(playersWithMaxVotes)
+      setTieBreak(true)
+      return
+    }
+    
+    // Si hay empate sin sheriff, nadie es ejecutado
+    if (playersWithMaxVotes.length > 1 && !sheriff) {
+      alert('Hay un empate y no hay Sheriff. Nadie será ejecutado.')
+      setTimeout(() => {
+        onDayEnd()
+      }, 2000)
+      return
+    }
+    
+    // Si no hay empate, ejecutar al más votado
+    const mostVotedId = playersWithMaxVotes[0]
     const result = onExecutePlayer(mostVotedId)
     
     if (result === 'hunter_revenge') {
       setHunterRevenge(true)
     } else {
-      // Si no hay venganza de cazador, pasar a la noche
       setTimeout(() => {
+        onDayEnd()
+      }, 2000)
+    }
+  }
+  
+  const handleSheriffDecision = () => {
+    if (!sheriffChoice) {
+      alert('El Sheriff debe elegir a quién ejecutar')
+      return
+    }
+    
+    const result = onExecutePlayer(sheriffChoice)
+    
+    if (result === 'hunter_revenge') {
+      setTieBreak(false)
+      setHunterRevenge(true)
+    } else {
+      setTimeout(() => {
+        setTieBreak(false)
         onDayEnd()
       }, 2000)
     }
@@ -81,6 +127,64 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
     setTimeout(() => {
       onDayEnd()
     }, 2000)
+  }
+  
+  // Popup de desempate del Sheriff
+  if (tieBreak) {
+    return (
+      <div className="bg-white rounded-2xl shadow-2xl p-6">
+        <div className="text-center mb-6">
+          <div className="text-6xl mb-4">⭐</div>
+          <h2 className="text-3xl font-bold text-yellow-600 mb-2">EMPATE EN VOTACIÓN</h2>
+          <p className="text-gray-600 mb-4">
+            El Sheriff <strong>{sheriff?.name}</strong> debe desempatar
+          </p>
+        </div>
+        
+        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-6">
+          <h3 className="font-bold text-yellow-900 mb-3">Jugadores empatados:</h3>
+          <div className="space-y-2">
+            {tiedPlayers.map(playerId => {
+              const player = alivePlayers.find(p => p.id === playerId)
+              return (
+                <div key={playerId} className="bg-white p-3 rounded-lg">
+                  <span className="font-medium text-gray-800">{player?.name}</span>
+                  <span className="text-gray-500 ml-2">({votes[playerId]} votos)</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            El Sheriff decide ejecutar a:
+          </label>
+          <select
+            value={sheriffChoice || ''}
+            onChange={(e) => setSheriffChoice(e.target.value)}
+            className="w-full px-4 py-3 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+          >
+            <option value="">-- Seleccionar --</option>
+            {tiedPlayers.map(playerId => {
+              const player = alivePlayers.find(p => p.id === playerId)
+              return (
+                <option key={playerId} value={playerId}>
+                  {player?.name}
+                </option>
+              )
+            })}
+          </select>
+        </div>
+        
+        <button
+          onClick={handleSheriffDecision}
+          className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+        >
+          ⭐ Confirmar Decisión del Sheriff
+        </button>
+      </div>
+    )
   }
   
   // Popup de venganza del cazador
@@ -192,6 +296,13 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
             <p className="text-purple-700 mb-4">
               Usa los botones +/- para contar los votos según las manos levantadas
             </p>
+            {sheriff && (
+              <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-4">
+                <p className="text-yellow-900 text-sm">
+                  ⭐ <strong>{sheriff.name}</strong> es el Sheriff y desempatará si es necesario
+                </p>
+              </div>
+            )}
             
             <div className="space-y-3">
               {alivePlayers.map(player => (

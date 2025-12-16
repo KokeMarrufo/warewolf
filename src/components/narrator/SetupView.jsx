@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { getRoleInfo } from '../../utils/roles'
 
-function SetupView({ roomCode, players, onAddPlayer, onRemovePlayer, onAssignRoles, onStartGame, onBack }) {
+function SetupView({ roomCode, players, onAddPlayer, onRemovePlayer, onAssignRoles, onSetSheriff, onStartGame, onBack }) {
   const [newPlayerName, setNewPlayerName] = useState('')
   
   const playerUrl = `${window.location.origin}/jugador?code=${roomCode}`
@@ -16,6 +16,7 @@ function SetupView({ roomCode, players, onAddPlayer, onRemovePlayer, onAssignRol
   }
   
   const allRolesAssigned = players.length > 0 && players.every(p => p.role)
+  const sheriff = players.find(p => p.is_sheriff)
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
@@ -98,7 +99,15 @@ function SetupView({ roomCode, players, onAddPlayer, onRemovePlayer, onAssignRol
                         {player.role_opened && (
                           <span className="text-green-500 text-xl">☑️</span>
                         )}
+                        {player.is_sheriff && (
+                          <span className="text-yellow-600 text-xl">⭐</span>
+                        )}
                         <span className="font-medium text-gray-800">{player.name}</span>
+                        {player.is_sheriff && (
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-bold">
+                            SHERIFF
+                          </span>
+                        )}
                         {roleInfo && (
                           <span className="text-sm text-gray-500">
                             {roleInfo.emoji} {roleInfo.name}
@@ -148,8 +157,39 @@ function SetupView({ roomCode, players, onAddPlayer, onRemovePlayer, onAssignRol
                 </button>
               </div>
 
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 className="font-bold text-yellow-900 mb-2">Paso 3: Designar Sheriff ⭐</h3>
+                <p className="text-sm text-yellow-700 mb-3">
+                  El Sheriff desempata las votaciones. Elige quién será el Sheriff del pueblo.
+                </p>
+                {sheriff ? (
+                  <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-3">
+                    <p className="text-yellow-900 font-bold text-center">
+                      ⭐ {sheriff.name} es el Sheriff
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-yellow-600 mb-3 text-center italic">
+                    Ningún sheriff asignado
+                  </p>
+                )}
+                <select
+                  onChange={(e) => onSetSheriff(e.target.value)}
+                  value={sheriff?.id || ''}
+                  disabled={players.length === 0}
+                  className="w-full px-4 py-3 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
+                >
+                  <option value="">-- Seleccionar Sheriff --</option>
+                  {players.map(player => (
+                    <option key={player.id} value={player.id}>
+                      {player.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-bold text-green-900 mb-2">Paso 3: Iniciar juego</h3>
+                <h3 className="font-bold text-green-900 mb-2">Paso 4: Iniciar juego</h3>
                 <p className="text-sm text-green-700 mb-3">
                   Los jugadores verán su rol asignado
                 </p>
