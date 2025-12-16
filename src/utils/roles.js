@@ -2,20 +2,21 @@
 
 export const ROLES = {
   WOLF: { id: 'wolf', name: 'Lobo', emoji: '🐺', description: 'Cada noche elige una víctima con los otros lobos' },
-  SEER: { id: 'seer', name: 'Vidente', emoji: '👁️', description: 'Cada noche puede investigar si alguien es lobo' },
-  DOCTOR: { id: 'doctor', name: 'Doctor', emoji: '⚕️', description: 'Cada noche puede proteger a alguien de los lobos' },
+  SEER: { id: 'seer', name: 'Vidente', emoji: '👁️', description: 'Cada noche puede investigar el rol de un jugador' },
+  WITCH: { id: 'witch', name: 'Bruja', emoji: '🧙‍♀️', description: 'Puede envenenar a alguien O revivir a la víctima (una vez cada uno)' },
   HUNTER: { id: 'hunter', name: 'Cazador', emoji: '🏹', description: 'Si muere, puede llevarse a alguien con él' },
+  GIRL: { id: 'girl', name: 'Niña', emoji: '👧', description: 'Rol especial sin habilidades activas' },
   VILLAGER: { id: 'villager', name: 'Aldeano', emoji: '👤', description: 'Vota durante el día para eliminar sospechosos' }
 }
 
 /**
  * Asigna roles aleatoriamente a los jugadores
  * @param {Array} players - Array de jugadores
- * @param {Object} config - Configuración { numWolves, includeSeer, includeDoctor, includeHunter }
+ * @param {Object} config - Configuración { numWolves, includeSeer, includeWitch, includeHunter, includeGirl }
  * @returns {Array} Array de jugadores con roles asignados
  */
 export function assignRoles(players, config) {
-  const { numWolves, includeSeer, includeDoctor, includeHunter } = config
+  const { numWolves, includeSeer, includeWitch, includeHunter, includeGirl } = config
   
   if (players.length < numWolves + 2) {
     throw new Error('No hay suficientes jugadores')
@@ -31,8 +32,9 @@ export function assignRoles(players, config) {
   
   // Agregar roles especiales
   if (includeSeer) roles.push(ROLES.SEER.id)
-  if (includeDoctor) roles.push(ROLES.DOCTOR.id)
+  if (includeWitch) roles.push(ROLES.WITCH.id)
   if (includeHunter) roles.push(ROLES.HUNTER.id)
+  if (includeGirl) roles.push(ROLES.GIRL.id)
   
   // Llenar el resto con aldeanos
   while (roles.length < players.length) {

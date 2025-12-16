@@ -14,9 +14,9 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
   const sheriff = alivePlayers.find(p => p.is_sheriff)
   
   // Obtener las muertes de la noche anterior del historial
-  const lastNightDeath = gameState.history
-    .filter(e => e.type === 'wolves')
-    .slice(-1)[0]
+  const lastNightDeaths = gameState.history
+    .filter(e => e.type === 'wolves' || e.type === 'witch')
+    .slice(-2) // Últimas 2 muertes (puede haber lobo + bruja)
   
   const handleAnnouncement = () => {
     setDeathAnnounced(true)
@@ -275,13 +275,20 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
       {/* Paso 2: Anuncio */}
       {deathAnnounced && !votingStarted && (
         <div className="space-y-6">
-          {lastNightDeath ? (
-            <div className="bg-red-50 border-2 border-red-300 rounded-xl p-8 text-center">
-              <div className="text-6xl mb-4">💀</div>
-              <p className="text-2xl font-bold text-red-800 mb-2">
-                {lastNightDeath.message}
-              </p>
-              <p className="text-gray-600">Ha sido asesinado por los lobos durante la noche</p>
+          {lastNightDeaths && lastNightDeaths.length > 0 ? (
+            <div className="space-y-4">
+              {lastNightDeaths.map((death, idx) => (
+                <div key={idx} className="bg-red-50 border-2 border-red-300 rounded-xl p-8 text-center">
+                  <div className="text-6xl mb-4">💀</div>
+                  <p className="text-2xl font-bold text-red-800 mb-2">
+                    {death.message}
+                  </p>
+                  <p className="text-gray-600">
+                    {death.type === 'wolves' && 'Ha sido asesinado por los lobos durante la noche'}
+                    {death.type === 'witch' && 'Ha sido envenenado por la bruja durante la noche'}
+                  </p>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="bg-green-50 border-2 border-green-300 rounded-xl p-8 text-center">
@@ -289,7 +296,7 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
               <p className="text-2xl font-bold text-green-800 mb-2">
                 Nadie murió esta noche
               </p>
-              <p className="text-gray-600">El doctor salvó a la víctima o no hubo ataque</p>
+              <p className="text-gray-600">La bruja salvó a la víctima o no hubo ataques</p>
             </div>
           )}
           

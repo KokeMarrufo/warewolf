@@ -15,8 +15,9 @@ function Narrator() {
   // Configuración
   const [numWolves, setNumWolves] = useState(1)
   const [includeSeer, setIncludeSeer] = useState(true)
-  const [includeDoctor, setIncludeDoctor] = useState(true)
+  const [includeWitch, setIncludeWitch] = useState(true)
   const [includeHunter, setIncludeHunter] = useState(false)
+  const [includeGirl, setIncludeGirl] = useState(false)
   
   // Jugadores
   const [players, setPlayers] = useState([])
@@ -29,7 +30,10 @@ function Narrator() {
     wolfTarget: null,
     seerTarget: null,
     seerResult: null,
-    doctorTarget: null,
+    witchReviveUsed: false,
+    witchPoisonUsed: false,
+    witchReviveTarget: null,
+    witchPoisonTarget: null,
     history: []
   })
   
@@ -61,8 +65,9 @@ function Narrator() {
         setNightSteps(parsed.nightSteps || [])
         setNumWolves(parsed.numWolves || 1)
         setIncludeSeer(parsed.includeSeer !== false)
-        setIncludeDoctor(parsed.includeDoctor !== false)
+        setIncludeWitch(parsed.includeWitch !== false)
         setIncludeHunter(parsed.includeHunter || false)
+        setIncludeGirl(parsed.includeGirl || false)
       } catch (e) {
         console.error('Error loading state:', e)
       }
@@ -81,11 +86,12 @@ function Narrator() {
         nightSteps,
         numWolves,
         includeSeer,
-        includeDoctor,
-        includeHunter
+        includeWitch,
+        includeHunter,
+        includeGirl
       }))
     }
-  }, [roomCode, roomId, gameStatus, players, gameState, nightSteps, numWolves, includeSeer, includeDoctor, includeHunter])
+  }, [roomCode, roomId, gameStatus, players, gameState, nightSteps, numWolves, includeSeer, includeWitch, includeHunter, includeGirl])
 
   const createNewGame = async () => {
     try {
@@ -100,8 +106,9 @@ function Narrator() {
           status: 'setup',
           num_wolves: numWolves,
           include_seer: includeSeer,
-          include_doctor: includeDoctor,
-          include_hunter: includeHunter
+          include_witch: includeWitch,
+          include_hunter: includeHunter,
+          include_girl: includeGirl
         })
         .select()
         .single()
@@ -222,8 +229,9 @@ function Narrator() {
       const playersWithRoles = assignRoles(players, {
         numWolves,
         includeSeer,
-        includeDoctor,
-        includeHunter
+        includeWitch,
+        includeHunter,
+        includeGirl
       })
       
       // Actualizar en BD
@@ -305,7 +313,10 @@ function Narrator() {
       wolfTarget: null,
       seerTarget: null,
       seerResult: null,
-      doctorTarget: null,
+      witchReviveUsed: false,
+      witchPoisonUsed: false,
+      witchReviveTarget: null,
+      witchPoisonTarget: null,
       history: []
     })
     setNightSteps([])
@@ -347,7 +358,10 @@ function Narrator() {
         wolfTarget: null,
         seerTarget: null,
         seerResult: null,
-        doctorTarget: null,
+        witchReviveUsed: false,
+        witchPoisonUsed: false,
+        witchReviveTarget: null,
+        witchPoisonTarget: null,
         history: []
       })
       setNightSteps([])
@@ -401,11 +415,11 @@ function Narrator() {
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={includeDoctor}
-                  onChange={(e) => setIncludeDoctor(e.target.checked)}
+                  checked={includeWitch}
+                  onChange={(e) => setIncludeWitch(e.target.checked)}
                   className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                 />
-                <span className="text-gray-700">Incluir Doctor ⚕️</span>
+                <span className="text-gray-700">Incluir Bruja 🧙‍♀️</span>
               </label>
 
               <label className="flex items-center space-x-3 cursor-pointer">
@@ -416,6 +430,16 @@ function Narrator() {
                   className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                 />
                 <span className="text-gray-700">Incluir Cazador 🏹</span>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeGirl}
+                  onChange={(e) => setIncludeGirl(e.target.checked)}
+                  className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <span className="text-gray-700">Incluir Niña 👧</span>
               </label>
             </div>
 

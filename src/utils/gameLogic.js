@@ -64,15 +64,24 @@ export function generateNightSteps(players) {
     })
   }
   
-  // Paso de doctor
-  const doctor = players.find(p => p.role === 'doctor' && p.is_alive)
-  if (doctor) {
+  // Paso de bruja - Poción de vida (revivir)
+  const witch = players.find(p => p.role === 'witch' && p.is_alive)
+  if (witch) {
     steps.push({
-      id: 'doctor',
-      title: 'Doctor despierta',
-      description: `"${doctor.name}, abre los ojos. Señala a quien quieres proteger"`,
-      action: 'select_protect',
-      roleInvolved: 'doctor'
+      id: 'witch_revive',
+      title: 'Bruja despierta - Poción de Vida',
+      description: `"${witch.name}, abre los ojos. ¿Quieres usar tu poción de vida para revivir a la víctima?"`,
+      action: 'witch_revive',
+      roleInvolved: 'witch'
+    })
+    
+    // Paso de bruja - Poción de muerte (envenenar)
+    steps.push({
+      id: 'witch_poison',
+      title: 'Bruja - Poción de Muerte',
+      description: `"${witch.name}, ¿quieres usar tu poción de muerte para envenenar a alguien?"`,
+      action: 'witch_poison',
+      roleInvolved: 'witch'
     })
   }
   

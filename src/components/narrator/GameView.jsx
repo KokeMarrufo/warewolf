@@ -77,7 +77,10 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
         wolfTarget: null,
         seerTarget: null,
         seerResult: null,
-        doctorTarget: null
+        seerRoleName: null,
+        seerRoleEmoji: null,
+        witchReviveTarget: null,
+        witchPoisonTarget: null
       })
     } else if (newPhase === 'night') {
       // Regenerar pasos de la noche con jugadores actuales
@@ -92,7 +95,10 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
         wolfTarget: null,
         seerTarget: null,
         seerResult: null,
-        doctorTarget: null
+        seerRoleName: null,
+        seerRoleEmoji: null,
+        witchReviveTarget: null,
+        witchPoisonTarget: null
       })
     }
   }
