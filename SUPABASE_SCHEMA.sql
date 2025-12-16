@@ -9,8 +9,9 @@ CREATE TABLE IF NOT EXISTS rooms (
   status TEXT DEFAULT 'setup', -- 'setup', 'playing', 'finished'
   num_wolves INTEGER DEFAULT 1,
   include_seer BOOLEAN DEFAULT true,
-  include_doctor BOOLEAN DEFAULT true,
-  include_hunter BOOLEAN DEFAULT false
+  include_witch BOOLEAN DEFAULT true,  -- Bruja (reemplaza al Doctor)
+  include_hunter BOOLEAN DEFAULT false,
+  include_girl BOOLEAN DEFAULT false   -- Niña (nuevo rol pasivo)
 );
 
 -- Tabla de jugadores
@@ -18,7 +19,7 @@ CREATE TABLE IF NOT EXISTS players (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  role TEXT, -- 'wolf', 'seer', 'doctor', 'hunter', 'villager'
+  role TEXT, -- 'wolf', 'seer', 'witch', 'hunter', 'girl', 'villager'
   is_alive BOOLEAN DEFAULT true,
   role_opened BOOLEAN DEFAULT false,
   is_sheriff BOOLEAN DEFAULT false, -- Sheriff del pueblo (desempata votos)
@@ -37,8 +38,11 @@ CREATE TABLE IF NOT EXISTS game_state (
   -- Acciones de la noche
   wolf_target UUID REFERENCES players(id),
   seer_target UUID REFERENCES players(id),
-  seer_result TEXT, -- 'wolf', 'not_wolf'
-  doctor_target UUID REFERENCES players(id),
+  seer_result TEXT, -- El rol completo del investigado
+  witch_revive_used BOOLEAN DEFAULT false,
+  witch_poison_used BOOLEAN DEFAULT false,
+  witch_revive_target UUID REFERENCES players(id),
+  witch_poison_target UUID REFERENCES players(id),
   
   -- Historial
   history JSONB DEFAULT '[]'::jsonb,
