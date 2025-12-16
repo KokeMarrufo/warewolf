@@ -86,9 +86,9 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
     
     // Si no hay empate, ejecutar al más votado
     const mostVotedId = playersWithMaxVotes[0]
-    const result = onExecutePlayer(mostVotedId)
+    const hunterRevenge = onExecutePlayer(mostVotedId, 'vote')
     
-    if (result && result.type === 'hunter_revenge') {
+    if (hunterRevenge && hunterRevenge.type === 'hunter_revenge') {
       setHunterRevenge(true)
     } else {
       setTimeout(() => {
@@ -103,9 +103,9 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
       return
     }
     
-    const result = onExecutePlayer(sheriffChoice)
+    const hunterRevenge = onExecutePlayer(sheriffChoice, 'vote')
     
-    if (result && result.type === 'hunter_revenge') {
+    if (hunterRevenge && hunterRevenge.type === 'hunter_revenge') {
       setTieBreak(false)
       setHunterRevenge(true)
     } else {
@@ -122,7 +122,7 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
       return
     }
     
-    onExecutePlayer(revengeTarget)
+    onExecutePlayer(revengeTarget, 'hunter')
     
     setTimeout(() => {
       onDayEnd()
@@ -136,7 +136,7 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
     }
     
     console.log('🏹 Cazador de noche mata a:', revengeTarget)
-    onExecutePlayer(revengeTarget)
+    onExecutePlayer(revengeTarget, 'hunter')
     
     setTimeout(() => {
       setShowNightHunterRevenge(false)

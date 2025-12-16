@@ -6,17 +6,18 @@ export const ROLES = {
   WITCH: { id: 'witch', name: 'Bruja', emoji: '🧙‍♀️', description: 'Puede envenenar a alguien O revivir a la víctima (una vez cada uno)' },
   HUNTER: { id: 'hunter', name: 'Cazador', emoji: '🏹', description: 'Si muere, puede llevarse a alguien con él' },
   GIRL: { id: 'girl', name: 'Niña', emoji: '👧', description: 'Rol especial sin habilidades activas' },
+  CUPID: { id: 'cupid', name: 'Cupido', emoji: '💘', description: 'Al inicio del juego, flecha a 2 jugadores. Si uno muere, el otro también muere' },
   VILLAGER: { id: 'villager', name: 'Aldeano', emoji: '👤', description: 'Vota durante el día para eliminar sospechosos' }
 }
 
 /**
  * Asigna roles aleatoriamente a los jugadores
  * @param {Array} players - Array de jugadores
- * @param {Object} config - Configuración { numWolves, includeSeer, includeWitch, includeHunter, includeGirl }
+ * @param {Object} config - Configuración { numWolves, includeSeer, includeWitch, includeHunter, includeGirl, includeCupid }
  * @returns {Array} Array de jugadores con roles asignados
  */
 export function assignRoles(players, config) {
-  const { numWolves, includeSeer, includeWitch, includeHunter, includeGirl } = config
+  const { numWolves, includeSeer, includeWitch, includeHunter, includeGirl, includeCupid } = config
   
   if (players.length < numWolves + 2) {
     throw new Error('No hay suficientes jugadores')
@@ -35,6 +36,7 @@ export function assignRoles(players, config) {
   if (includeWitch) roles.push(ROLES.WITCH.id)
   if (includeHunter) roles.push(ROLES.HUNTER.id)
   if (includeGirl) roles.push(ROLES.GIRL.id)
+  if (includeCupid) roles.push(ROLES.CUPID.id)
   
   // Llenar el resto con aldeanos
   while (roles.length < players.length) {

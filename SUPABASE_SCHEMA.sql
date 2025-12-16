@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS rooms (
   include_seer BOOLEAN DEFAULT true,
   include_witch BOOLEAN DEFAULT true,  -- Bruja (reemplaza al Doctor)
   include_hunter BOOLEAN DEFAULT false,
-  include_girl BOOLEAN DEFAULT false   -- Niña (nuevo rol pasivo)
+  include_girl BOOLEAN DEFAULT false,  -- Niña (nuevo rol pasivo)
+  include_cupid BOOLEAN DEFAULT false  -- Cupido (flechador)
 );
 
 -- Tabla de jugadores
@@ -19,10 +20,11 @@ CREATE TABLE IF NOT EXISTS players (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  role TEXT, -- 'wolf', 'seer', 'witch', 'hunter', 'girl', 'villager'
+  role TEXT, -- 'wolf', 'seer', 'witch', 'hunter', 'girl', 'cupid', 'villager'
   is_alive BOOLEAN DEFAULT true,
   role_opened BOOLEAN DEFAULT false,
   is_sheriff BOOLEAN DEFAULT false, -- Sheriff del pueblo (desempata votos)
+  cupid_partner_id UUID REFERENCES players(id) ON DELETE SET NULL, -- Pareja flechada por Cupido
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(room_id, name)
 );
@@ -53,6 +55,7 @@ CREATE TABLE IF NOT EXISTS game_state (
 -- Índices para optimizar consultas
 CREATE INDEX IF NOT EXISTS idx_players_room ON players(room_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_code ON rooms(code);
+CREATE INDEX IF NOT EXISTS idx_players_cupid_partner ON players(cupid_partner_id);
 
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;

@@ -33,14 +33,23 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
     ))
   }
 
-  // Matar jugador
-  const killPlayer = (playerId, cause) => {
-    updatePlayer(playerId, { is_alive: false })
+  // Matar jugador (con actualización inmediata de estado local)
+  const killPlayer = (playerId, cause, currentPlayers = players) => {
+    const player = currentPlayers.find(p => p.id === playerId)
+    
+    if (!player || !player.is_alive) {
+      console.log('⚠️ Jugador ya muerto o no encontrado:', playerId)
+      return { updatedPlayers: currentPlayers, hunterRevenge: null }
+    }
+    
+    console.log(`💀 Matando a ${player.name} (${cause})`)
+    
+    // Actualizar jugadores (local)
+    const updatedPlayers = currentPlayers.map(p => 
+      p.id === playerId ? { ...p, is_alive: false } : p
+    )
     
     // Agregar al historial
-    const player = players.find(p => p.id === playerId)
-    
-    // Mensaje según causa de muerte
     let message
     if (cause === 'wolves') {
       message = `${player.name} ha muerto (lobos)`
@@ -48,6 +57,8 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
       message = `${player.name} ha muerto (bruja)`
     } else if (cause === 'vote') {
       message = `${player.name} ha muerto (votación)`
+    } else if (cause === 'hunter') {
+      message = `${player.name} ha muerto (cazador)`
     } else {
       message = `${player.name} ha muerto`
     }
@@ -65,25 +76,19 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
     setGameState({ ...gameState, history: newHistory })
     
     // Verificar condición de victoria
-    const updatedPlayers = players.map(p => 
-      p.id === playerId ? { ...p, is_alive: false } : p
-    )
-    
     const winCondition = checkWinCondition(updatedPlayers)
     if (winCondition) {
       onGameEnd(winCondition)
     }
     
-    // Si era cazador, devolver objeto con más info
-    if (player.role === 'hunter') {
-      return { 
-        type: 'hunter_revenge',
-        hunterId: playerId,
-        hunterName: player.name
-      }
-    }
+    // Si era cazador, devolver info para venganza
+    const hunterRevenge = player.role === 'hunter' ? { 
+      type: 'hunter_revenge',
+      hunterId: playerId,
+      hunterName: player.name
+    } : null
     
-    return null
+    return { updatedPlayers, hunterRevenge }
   }
 
   // Cambiar de fase
@@ -237,32 +242,38 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 onNightEnd={(deaths) => {
                   console.log('🌅 Procesando muertes nocturnas:', deaths)
                   
-                  // Procesar muertes y detectar cazador
+                  // Procesar TODAS las muertes manteniendo estado sincronizado
+                  let currentPlayers = [...players]
                   let hunterRevengeData = null
                   const deathsWithNames = []
                   
                   deaths.forEach(death => {
-                    const result = killPlayer(death.playerId, death.cause)
+                    const player = currentPlayers.find(p => p.id === death.playerId)
+                    if (!player) return
                     
-                    // Guardar muerte con nombre para el anuncio
-                    const player = players.find(p => p.id === death.playerId)
-                    if (player) {
-                      deathsWithNames.push({
-                        playerId: death.playerId,
-                        playerName: player.name,
-                        cause: death.cause
-                      })
-                    }
+                    // Guardar muerte para anuncio (ANTES de matar)
+                    deathsWithNames.push({
+                      playerId: death.playerId,
+                      playerName: player.name,
+                      cause: death.cause
+                    })
+                    
+                    // Matar jugador y actualizar estado
+                    const result = killPlayer(death.playerId, death.cause, currentPlayers)
+                    currentPlayers = result.updatedPlayers
                     
                     // Si murió un cazador, guardar para el día
-                    if (result && result.type === 'hunter_revenge') {
-                      console.log('🏹 Cazador muerto de noche:', result)
-                      hunterRevengeData = result
+                    if (result.hunterRevenge) {
+                      console.log('🏹 Cazador muerto de noche:', result.hunterRevenge)
+                      hunterRevengeData = result.hunterRevenge
                     }
                   })
                   
-                  // Guardar muertes para mostrar en el día
+                  // Actualizar estado global con TODOS los cambios
                   console.log('💀 Muertes para anunciar:', deathsWithNames)
+                  console.log('👥 Actualizando jugadores:', currentPlayers.filter(p => !p.is_alive).map(p => p.name))
+                  
+                  setPlayers(currentPlayers)
                   setLastNightDeaths(deathsWithNames)
                   
                   // Si hubo cazador, guardarlo para mostrarlo al inicio del día
@@ -281,9 +292,11 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 gameState={gameState}
                 lastNightDeaths={lastNightDeaths}
                 pendingHunterRevenge={pendingHunterRevenge}
-                onExecutePlayer={(playerId) => {
-                  const result = killPlayer(playerId, 'vote')
-                  return result
+                onExecutePlayer={(playerId, cause = 'vote') => {
+                  const result = killPlayer(playerId, cause, players)
+                  // Actualizar estado inmediatamente
+                  setPlayers(result.updatedPlayers)
+                  return result.hunterRevenge
                 }}
                 onDayEnd={() => {
                   setPendingHunterRevenge(null) // Limpiar venganza pendiente

@@ -18,9 +18,13 @@ function Narrator() {
   const [includeWitch, setIncludeWitch] = useState(true)
   const [includeHunter, setIncludeHunter] = useState(false)
   const [includeGirl, setIncludeGirl] = useState(false)
+  const [includeCupid, setIncludeCupid] = useState(false)
   
   // Jugadores
   const [players, setPlayers] = useState([])
+  
+  // Flechas de Cupido
+  const [cupidArrowsSet, setCupidArrowsSet] = useState(false) // Si ya se flecharon jugadores
   
   // Estado del juego
   const [gameState, setGameState] = useState({
@@ -68,6 +72,8 @@ function Narrator() {
         setIncludeWitch(parsed.includeWitch !== false)
         setIncludeHunter(parsed.includeHunter || false)
         setIncludeGirl(parsed.includeGirl || false)
+        setIncludeCupid(parsed.includeCupid || false)
+        setCupidArrowsSet(parsed.cupidArrowsSet || false)
       } catch (e) {
         console.error('Error loading state:', e)
       }
@@ -88,10 +94,12 @@ function Narrator() {
         includeSeer,
         includeWitch,
         includeHunter,
-        includeGirl
+        includeGirl,
+        includeCupid,
+        cupidArrowsSet
       }))
     }
-  }, [roomCode, roomId, gameStatus, players, gameState, nightSteps, numWolves, includeSeer, includeWitch, includeHunter, includeGirl])
+  }, [roomCode, roomId, gameStatus, players, gameState, nightSteps, numWolves, includeSeer, includeWitch, includeHunter, includeGirl, includeCupid, cupidArrowsSet])
 
   const createNewGame = async () => {
     try {
@@ -108,7 +116,8 @@ function Narrator() {
           include_seer: includeSeer,
           include_witch: includeWitch,
           include_hunter: includeHunter,
-          include_girl: includeGirl
+          include_girl: includeGirl,
+          include_cupid: includeCupid
         })
         .select()
         .single()
@@ -231,7 +240,8 @@ function Narrator() {
         includeSeer,
         includeWitch,
         includeHunter,
-        includeGirl
+        includeGirl,
+        includeCupid
       })
       
       // Actualizar en BD
@@ -441,6 +451,16 @@ function Narrator() {
                 />
                 <span className="text-gray-700">Incluir Niña 👧</span>
               </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeCupid}
+                  onChange={(e) => setIncludeCupid(e.target.checked)}
+                  className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <span className="text-gray-700">Incluir Cupido 💘</span>
+              </label>
             </div>
 
             <button
@@ -459,7 +479,9 @@ function Narrator() {
     return (
       <SetupView
         roomCode={roomCode}
+        roomId={roomId}
         players={players}
+        setPlayers={setPlayers}
         onAddPlayer={addPlayerManually}
         onRemovePlayer={removePlayer}
         onAssignRoles={assignRolesToPlayers}
@@ -477,6 +499,11 @@ function Narrator() {
         setIncludeHunter={setIncludeHunter}
         includeGirl={includeGirl}
         setIncludeGirl={setIncludeGirl}
+        includeCupid={includeCupid}
+        setIncludeCupid={setIncludeCupid}
+        // Cupido
+        cupidArrowsSet={cupidArrowsSet}
+        setCupidArrowsSet={setCupidArrowsSet}
       />
     )
   }
