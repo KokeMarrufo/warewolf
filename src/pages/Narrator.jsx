@@ -460,6 +460,7 @@ function Narrator() {
           setWinner(winnerData)
           setGameStatus('finished')
         }}
+        onExitGame={resetGame}
       />
     )
   }

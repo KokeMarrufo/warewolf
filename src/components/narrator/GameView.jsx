@@ -4,10 +4,25 @@ import { processNightActions, generateNightSteps } from '../../utils/gameLogic'
 import NightPhase from './NightPhase'
 import DayPhase from './DayPhase'
 
-function GameView({ roomCode, players, setPlayers, gameState, setGameState, nightSteps, setNightSteps, onGameEnd }) {
+function GameView({ roomCode, players, setPlayers, gameState, setGameState, nightSteps, setNightSteps, onGameEnd, onExitGame }) {
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
   
   const alivePlayers = players.filter(p => p.is_alive)
   const deadPlayers = players.filter(p => !p.is_alive)
+  
+  const handleExitClick = () => {
+    setShowExitConfirm(true)
+  }
+  
+  const handleConfirmExit = () => {
+    if (onExitGame) {
+      onExitGame()
+    }
+  }
+  
+  const handleCancelExit = () => {
+    setShowExitConfirm(false)
+  }
   
   // Actualizar jugador
   const updatePlayer = (playerId, updates) => {
@@ -100,13 +115,23 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
               </div>
             </div>
             
-            <div className="text-right">
-              <p className="text-lg font-bold text-green-600">
-                {alivePlayers.length} vivos
-              </p>
-              <p className="text-sm text-gray-500">
-                {deadPlayers.length} muertos
-              </p>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-lg font-bold text-green-600">
+                  {alivePlayers.length} vivos
+                </p>
+                <p className="text-sm text-gray-500">
+                  {deadPlayers.length} muertos
+                </p>
+              </div>
+              
+              <button
+                onClick={handleExitClick}
+                className="bg-red-100 hover:bg-red-200 text-red-700 font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+                title="Salir de la partida"
+              >
+                🚪 Salir
+              </button>
             </div>
           </div>
         </div>
@@ -231,6 +256,44 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
           </div>
         )}
       </div>
+      
+      {/* Modal de confirmación de salida */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                ¿Salir de la partida?
+              </h2>
+              <p className="text-gray-600">
+                Esta acción terminará la partida actual y no se podrá recuperar el progreso.
+              </p>
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-yellow-800 text-sm">
+                <strong>⚠️ Advertencia:</strong> Todos los jugadores perderán acceso a la sala y tendrán que unirse a una nueva partida.
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={handleCancelExit}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                ❌ Cancelar
+              </button>
+              <button
+                onClick={handleConfirmExit}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                ✓ Salir de la Partida
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
