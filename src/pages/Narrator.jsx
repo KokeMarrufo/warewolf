@@ -281,6 +281,55 @@ function Narrator() {
     setWinner(null)
   }
 
+  const restartWithSamePlayers = async () => {
+    try {
+      // Resetear estado de jugadores en BD
+      for (const player of players) {
+        await supabase
+          .from('players')
+          .update({
+            role: null,
+            is_alive: true,
+            role_opened: false
+          })
+          .eq('id', player.id)
+      }
+
+      // Resetear estado del juego en BD
+      await supabase
+        .from('game_state')
+        .delete()
+        .eq('room_id', roomId)
+
+      // Actualizar sala a setup
+      await supabase
+        .from('rooms')
+        .update({ status: 'setup' })
+        .eq('id', roomId)
+
+      // Resetear estado local pero mantener sala y jugadores
+      setGameStatus('setup')
+      setGameState({
+        phase: 'night',
+        round: 1,
+        currentStep: 0,
+        wolfTarget: null,
+        seerTarget: null,
+        seerResult: null,
+        doctorTarget: null,
+        history: []
+      })
+      setNightSteps([])
+      setWinner(null)
+
+      // Recargar jugadores
+      await fetchPlayers()
+    } catch (error) {
+      console.error('Error restarting game:', error)
+      alert('Error al reiniciar la partida')
+    }
+  }
+
   // Renderizar vista según estado
   if (gameStatus === 'idle') {
     return (
@@ -389,6 +438,7 @@ function Narrator() {
       <VictoryView
         winner={winner}
         players={players}
+        onPlayAgain={restartWithSamePlayers}
         onNewGame={resetGame}
       />
     )

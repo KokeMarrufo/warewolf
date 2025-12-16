@@ -1,6 +1,6 @@
 import { getRoleInfo } from '../../utils/roles'
 
-function VictoryView({ winner, players, onNewGame }) {
+function VictoryView({ winner, players, onPlayAgain, onNewGame }) {
   const isWolvesWin = winner.winner === 'wolves'
   
   return (
@@ -60,13 +60,28 @@ function VictoryView({ winner, players, onNewGame }) {
             })}
           </div>
 
-          <div className="mt-8 pt-8 border-t-2 border-gray-200">
+          <div className="mt-8 pt-8 border-t-2 border-gray-200 space-y-4">
+            <button
+              onClick={onPlayAgain}
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105 shadow-lg"
+            >
+              🔄 Jugar Otra Ronda
+            </button>
+            
+            <p className="text-center text-gray-600 text-sm">
+              Los mismos jugadores, nuevos roles
+            </p>
+            
             <button
               onClick={onNewGame}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105 shadow-lg"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
             >
-              🎮 Nueva Partida
+              🎮 Nueva Partida Completa
             </button>
+            
+            <p className="text-center text-gray-500 text-xs">
+              Empezar desde cero con nuevos jugadores
+            </p>
           </div>
         </div>
       </div>
