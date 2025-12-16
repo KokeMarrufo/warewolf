@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getRoleInfo } from '../../utils/roles'
 
 function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd }) {
   const [deathAnnounced, setDeathAnnounced] = useState(false)
@@ -189,37 +190,59 @@ function DayPhase({ players, alivePlayers, gameState, onExecutePlayer, onDayEnd 
   
   // Popup de venganza del cazador
   if (hunterRevenge) {
+    const hunterPlayer = players.find(p => p.role === 'hunter' && !p.is_alive)
+    
     return (
       <div className="bg-white rounded-2xl shadow-2xl p-6">
         <div className="text-center mb-6">
           <div className="text-6xl mb-4">🏹</div>
-          <h2 className="text-3xl font-bold text-red-600 mb-2">CAZADOR ELIMINADO</h2>
-          <p className="text-gray-600">El cazador puede llevarse a alguien con él</p>
+          <h2 className="text-3xl font-bold text-red-600 mb-2">¡CAZADOR ELIMINADO!</h2>
+          <p className="text-gray-600 text-lg">
+            <strong>{hunterPlayer?.name}</strong> era el Cazador
+          </p>
+          <p className="text-gray-500 mt-2">
+            Puede llevarse a alguien con él antes de morir
+          </p>
+        </div>
+        
+        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4 mb-6">
+          <p className="text-orange-900 text-sm">
+            <strong>📋 Instrucciones para el Narrador:</strong>
+          </p>
+          <ol className="list-decimal list-inside text-orange-800 text-sm mt-2 space-y-1">
+            <li>Pregúntale al Cazador a quién quiere llevarse</li>
+            <li>Selecciona al jugador elegido abajo</li>
+            <li>Confirma la venganza</li>
+          </ol>
         </div>
         
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            El cazador elige llevarse a:
+            <strong>El Cazador elige llevarse a:</strong>
           </label>
           <select
             value={revengeTarget || ''}
             onChange={(e) => setRevengeTarget(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+            className="w-full px-4 py-3 border-2 border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 text-lg font-medium"
           >
-            <option value="">-- Seleccionar --</option>
-            {alivePlayers.map(player => (
-              <option key={player.id} value={player.id}>
-                {player.name}
-              </option>
-            ))}
+            <option value="">-- Seleccionar jugador --</option>
+            {alivePlayers.map(player => {
+              const roleInfo = getRoleInfo(player.role)
+              return (
+                <option key={player.id} value={player.id}>
+                  {player.name} ({roleInfo.name})
+                </option>
+              )
+            })}
           </select>
         </div>
         
         <button
           onClick={handleHunterRevenge}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+          disabled={!revengeTarget}
+          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-4 px-4 rounded-lg transition-colors text-lg"
         >
-          Confirmar venganza
+          💀 Confirmar Venganza del Cazador
         </button>
       </div>
     )

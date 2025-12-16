@@ -45,11 +45,10 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
       seerTarget: selectedInvestigate,
       seerResult: isWolf ? 'wolf' : 'not_wolf'
     })
-    
-    // Mostrar resultado al narrador
-    setTimeout(() => {
-      goToNextStep()
-    }, 3000)
+  }
+  
+  const handleContinueAfterSeer = () => {
+    goToNextStep()
   }
   
   const handleProtect = () => {
@@ -176,41 +175,64 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
         {/* Acción: Investigar (Vidente) */}
         {currentStepData.action === 'select_investigate' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              El vidente investiga a:
-            </label>
-            <select
-              value={selectedInvestigate || ''}
-              onChange={(e) => setSelectedInvestigate(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 mb-4"
-            >
-              <option value="">-- Seleccionar --</option>
-              {alivePlayers
-                .filter(p => p.role !== 'seer')
-                .map(player => (
-                  <option key={player.id} value={player.id}>
-                    {player.name}
-                  </option>
-                ))}
-            </select>
-            
-            {gameState.seerResult && (
-              <div className={`mb-4 p-4 rounded-lg font-bold text-center text-xl ${
-                gameState.seerResult === 'wolf'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-green-100 text-green-800'
-              }`}>
-                {gameState.seerResult === 'wolf' ? '🐺 ES LOBO' : '✓ NO ES LOBO'}
+            {!gameState.seerResult ? (
+              // Paso 1: Seleccionar jugador a investigar
+              <>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  El vidente investiga a:
+                </label>
+                <select
+                  value={selectedInvestigate || ''}
+                  onChange={(e) => setSelectedInvestigate(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 mb-4"
+                >
+                  <option value="">-- Seleccionar --</option>
+                  {alivePlayers
+                    .filter(p => p.role !== 'seer')
+                    .map(player => (
+                      <option key={player.id} value={player.id}>
+                        {player.name}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  onClick={handleInvestigate}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                >
+                  🔍 Investigar →
+                </button>
+              </>
+            ) : (
+              // Paso 2: Mostrar resultado y permitir continuar
+              <div>
+                <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+                  <p className="text-blue-900 font-medium mb-3">
+                    Resultado de la investigación:
+                  </p>
+                  <div className={`p-6 rounded-lg font-bold text-center text-2xl ${
+                    gameState.seerResult === 'wolf'
+                      ? 'bg-red-100 border-2 border-red-300 text-red-800'
+                      : 'bg-green-100 border-2 border-green-300 text-green-800'
+                  }`}>
+                    {gameState.seerResult === 'wolf' ? '🐺 ES LOBO' : '✅ NO ES LOBO'}
+                  </div>
+                </div>
+                
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    💡 <strong>Instrucción:</strong> Muéstrale este resultado al Vidente (sin que los demás vean). 
+                    Cuando esté listo, haz clic en continuar.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={handleContinueAfterSeer}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                >
+                  ✓ Continuar (El vidente ya vio el resultado)
+                </button>
               </div>
             )}
-            
-            <button
-              onClick={handleInvestigate}
-              disabled={gameState.seerResult}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400"
-            >
-              {gameState.seerResult ? 'Resultado mostrado...' : 'Investigar →'}
-            </button>
           </div>
         )}
         
@@ -254,27 +276,77 @@ function NightPhase({ players, alivePlayers, gameState, setGameState, nightSteps
         {/* Acción: Procesar noche (Amanecer) */}
         {currentStepData.action === 'process_night' && (
           <div>
-            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 text-sm">
-                <strong>Resumen de la noche:</strong>
+            <div className="mb-4 p-4 bg-purple-50 border-2 border-purple-300 rounded-xl">
+              <p className="text-purple-900 font-bold text-lg mb-3">
+                📋 Resumen de la noche:
               </p>
-              <ul className="mt-2 text-sm text-yellow-700">
-                {gameState.wolfTarget && (
-                  <li>• Lobos atacaron a: {players.find(p => p.id === gameState.wolfTarget)?.name}</li>
+              <div className="space-y-2">
+                {gameState.wolfTarget ? (
+                  <div className="bg-red-100 p-3 rounded-lg border border-red-300">
+                    <p className="text-red-900 font-medium">
+                      🐺 Lobos atacaron a: <strong>{players.find(p => p.id === gameState.wolfTarget)?.name}</strong>
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-gray-100 p-3 rounded-lg border border-gray-300">
+                    <p className="text-gray-600">⚠️ Los lobos no seleccionaron víctima</p>
+                  </div>
                 )}
+                
                 {gameState.doctorTarget && (
-                  <li>• Doctor protegió a: {players.find(p => p.id === gameState.doctorTarget)?.name}</li>
+                  <div className="bg-green-100 p-3 rounded-lg border border-green-300">
+                    <p className="text-green-900 font-medium">
+                      ⚕️ Doctor protegió a: <strong>{players.find(p => p.id === gameState.doctorTarget)?.name}</strong>
+                    </p>
+                  </div>
                 )}
+                
                 {gameState.seerTarget && (
-                  <li>• Vidente investigó a: {players.find(p => p.id === gameState.seerTarget)?.name}</li>
+                  <div className="bg-blue-100 p-3 rounded-lg border border-blue-300">
+                    <p className="text-blue-900 font-medium">
+                      👁️ Vidente investigó a: <strong>{players.find(p => p.id === gameState.seerTarget)?.name}</strong>
+                    </p>
+                  </div>
                 )}
-              </ul>
+              </div>
             </div>
+            
+            {/* Previsualización del resultado */}
+            <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl">
+              <p className="text-yellow-900 font-bold mb-2">⚠️ Resultado del amanecer:</p>
+              {(() => {
+                const wolfVictim = gameState.wolfTarget
+                const doctorProtected = gameState.doctorTarget
+                const willDie = wolfVictim && wolfVictim !== doctorProtected
+                
+                if (willDie) {
+                  const victim = players.find(p => p.id === wolfVictim)
+                  return (
+                    <p className="text-red-800 font-medium text-lg">
+                      💀 <strong>{victim?.name}</strong> morirá (no fue protegido)
+                    </p>
+                  )
+                } else if (wolfVictim && wolfVictim === doctorProtected) {
+                  return (
+                    <p className="text-green-800 font-medium text-lg">
+                      ✨ Nadie morirá (el doctor salvó a la víctima)
+                    </p>
+                  )
+                } else {
+                  return (
+                    <p className="text-green-800 font-medium text-lg">
+                      ✨ Nadie morirá (no hubo ataque)
+                    </p>
+                  )
+                }
+              })()}
+            </div>
+            
             <button
               onClick={handleProcessNight}
-              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-4 px-4 rounded-lg transition-colors text-xl"
+              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-4 px-4 rounded-lg transition-colors text-xl shadow-lg"
             >
-              ☀️ Amanecer - Revelar resultado
+              ☀️ Amanecer - Procesar y Revelar Resultado
             </button>
           </div>
         )}
