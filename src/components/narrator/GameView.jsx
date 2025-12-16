@@ -4,7 +4,7 @@ import { processNightActions, generateNightSteps } from '../../utils/gameLogic'
 import NightPhase from './NightPhase'
 import DayPhase from './DayPhase'
 
-function GameView({ roomCode, players, setPlayers, gameState, setGameState, nightSteps, setNightSteps, onGameEnd, onExitGame }) {
+function GameView({ roomCode, players, setPlayers, gameState, setGameState, nightSteps, setNightSteps, onGameEnd, onExitGame, onSetSheriff }) {
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [pendingHunterRevenge, setPendingHunterRevenge] = useState(null) // Para cazador que muere de noche
   const [lastNightDeaths, setLastNightDeaths] = useState([]) // Muertes de la noche anterior
@@ -321,6 +321,7 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 gameState={gameState}
                 lastNightDeaths={lastNightDeaths}
                 pendingHunterRevenge={pendingHunterRevenge}
+                onSetSheriff={onSetSheriff}
                 onExecutePlayer={(playerId, cause = 'vote') => {
                   const result = killPlayer(playerId, cause, players)
                   // Actualizar estado inmediatamente

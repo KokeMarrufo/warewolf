@@ -523,6 +523,7 @@ function Narrator() {
           setGameStatus('finished')
         }}
         onExitGame={resetGame}
+        onSetSheriff={setSheriff}
       />
     )
   }

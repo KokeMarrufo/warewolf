@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getRoleInfo } from '../../utils/roles'
 
-function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHunterRevenge, onExecutePlayer, onDayEnd, onHunterRevengeComplete }) {
+function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHunterRevenge, onExecutePlayer, onDayEnd, onHunterRevengeComplete, onSetSheriff }) {
   const [deathAnnounced, setDeathAnnounced] = useState(false)
   const [votingStarted, setVotingStarted] = useState(false)
   const [votes, setVotes] = useState({})
@@ -11,14 +11,42 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
   const [tiedPlayers, setTiedPlayers] = useState([])
   const [sheriffChoice, setSheriffChoice] = useState(null)
   const [showNightHunterRevenge, setShowNightHunterRevenge] = useState(!!pendingHunterRevenge)
+  const [showSheriffSelection, setShowSheriffSelection] = useState(false)
+  const [newSheriffId, setNewSheriffId] = useState('')
   
   const sheriff = alivePlayers.find(p => p.is_sheriff)
+  
+  // Verificar si el sheriff murió en lastNightDeaths
+  const sheriffDied = players.find(p => p.is_sheriff && !p.is_alive)
   
   // lastNightDeaths ahora viene directamente de GameView, no del historial
   console.log('📢 DayPhase - Muertes a anunciar:', lastNightDeaths)
   
   const handleAnnouncement = () => {
     setDeathAnnounced(true)
+    
+    // Si el sheriff murió, mostrar selector después del anuncio
+    if (sheriffDied && alivePlayers.length > 0) {
+      setTimeout(() => {
+        setShowSheriffSelection(true)
+      }, 500)
+    }
+  }
+  
+  const handleNewSheriffSelection = async () => {
+    if (!newSheriffId) {
+      alert('Debes seleccionar un nuevo Sheriff')
+      return
+    }
+    
+    await onSetSheriff(newSheriffId)
+    setShowSheriffSelection(false)
+    setNewSheriffId('')
+  }
+  
+  const handleSkipSheriff = () => {
+    setShowSheriffSelection(false)
+    setNewSheriffId('')
   }
   
   const handleStartVoting = () => {
@@ -144,6 +172,73 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
         onHunterRevengeComplete()
       }
     }, 2000)
+  }
+  
+  // Popup de selección de nuevo Sheriff (si el sheriff murió)
+  if (showSheriffSelection) {
+    return (
+      <div className="bg-white rounded-2xl shadow-2xl p-6">
+        <div className="text-center mb-6">
+          <div className="text-6xl mb-4">⭐</div>
+          <h2 className="text-3xl font-bold text-yellow-600 mb-2">EL SHERIFF HA MUERTO</h2>
+          <p className="text-gray-600">
+            El pueblo necesita un nuevo Sheriff para desempatar votaciones
+          </p>
+        </div>
+        
+        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4 mb-6">
+          <p className="text-yellow-900 text-sm">
+            <strong>📋 Instrucciones:</strong>
+          </p>
+          <ol className="list-decimal list-inside text-yellow-800 text-sm mt-2 space-y-1">
+            <li>El narrador puede elegir un nuevo Sheriff</li>
+            <li>O puede dejar el pueblo sin Sheriff</li>
+            <li>El Sheriff desempata las votaciones en caso de empate</li>
+          </ol>
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <strong>Seleccionar nuevo Sheriff:</strong>
+          </label>
+          <select
+            value={newSheriffId}
+            onChange={(e) => setNewSheriffId(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-lg font-medium"
+          >
+            <option value="">-- Sin Sheriff --</option>
+            {alivePlayers.map(player => {
+              const roleInfo = getRoleInfo(player.role)
+              return (
+                <option key={player.id} value={player.id}>
+                  {player.name} ({roleInfo.name})
+                </option>
+              )
+            })}
+          </select>
+        </div>
+        
+        <div className="flex space-x-3">
+          <button
+            onClick={handleSkipSheriff}
+            className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-4 rounded-lg transition-colors"
+          >
+            Continuar sin Sheriff
+          </button>
+          <button
+            onClick={handleNewSheriffSelection}
+            disabled={!newSheriffId}
+            className={`flex-1 font-bold py-3 px-4 rounded-lg transition-colors ${
+              !newSheriffId
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+            }`}
+          >
+            ⭐ Confirmar Nuevo Sheriff
+          </button>
+        </div>
+      </div>
+    )
   }
   
   // Popup de venganza del cazador que murió de noche (PRIORIDAD)
