@@ -34,18 +34,18 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
   }
 
   // Matar jugador (con actualización inmediata de estado local)
-  const killPlayer = (playerId, cause, currentPlayers = players) => {
+  const killPlayer = (playerId, cause, currentPlayers = players, skipCupidCheck = false) => {
     const player = currentPlayers.find(p => p.id === playerId)
     
     if (!player || !player.is_alive) {
       console.log('⚠️ Jugador ya muerto o no encontrado:', playerId)
-      return { updatedPlayers: currentPlayers, hunterRevenge: null }
+      return { updatedPlayers: currentPlayers, hunterRevenge: null, cupidLinkedDeath: null }
     }
     
     console.log(`💀 Matando a ${player.name} (${cause})`)
     
     // Actualizar jugadores (local)
-    const updatedPlayers = currentPlayers.map(p => 
+    let updatedPlayers = currentPlayers.map(p => 
       p.id === playerId ? { ...p, is_alive: false } : p
     )
     
@@ -59,6 +59,8 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
       message = `${player.name} ha muerto (votación)`
     } else if (cause === 'hunter') {
       message = `${player.name} ha muerto (cazador)`
+    } else if (cause === 'cupid') {
+      message = `${player.name} ha muerto (amor de Cupido 💘)`
     } else {
       message = `${player.name} ha muerto`
     }
@@ -75,6 +77,23 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
     
     setGameState({ ...gameState, history: newHistory })
     
+    // Verificar si tiene pareja de Cupido (muerte enlazada)
+    let cupidLinkedDeath = null
+    if (!skipCupidCheck && player.cupid_partner_id) {
+      const partner = updatedPlayers.find(p => p.id === player.cupid_partner_id)
+      if (partner && partner.is_alive) {
+        console.log(`💘 Muerte enlazada: ${partner.name} muere por amor a ${player.name}`)
+        cupidLinkedDeath = {
+          playerId: partner.id,
+          playerName: partner.name
+        }
+        
+        // Matar a la pareja (con skipCupidCheck para evitar loop infinito)
+        const partnerResult = killPlayer(partner.id, 'cupid', updatedPlayers, true)
+        updatedPlayers = partnerResult.updatedPlayers
+      }
+    }
+    
     // Verificar condición de victoria
     const winCondition = checkWinCondition(updatedPlayers)
     if (winCondition) {
@@ -88,7 +107,7 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
       hunterName: player.name
     } : null
     
-    return { updatedPlayers, hunterRevenge }
+    return { updatedPlayers, hunterRevenge, cupidLinkedDeath }
   }
 
   // Cambiar de fase
@@ -261,6 +280,16 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                     // Matar jugador y actualizar estado
                     const result = killPlayer(death.playerId, death.cause, currentPlayers)
                     currentPlayers = result.updatedPlayers
+                    
+                    // Si hubo muerte enlazada de Cupido, agregarla al anuncio
+                    if (result.cupidLinkedDeath) {
+                      console.log('💘 Muerte enlazada de Cupido:', result.cupidLinkedDeath)
+                      deathsWithNames.push({
+                        playerId: result.cupidLinkedDeath.playerId,
+                        playerName: result.cupidLinkedDeath.playerName,
+                        cause: 'cupid'
+                      })
+                    }
                     
                     // Si murió un cazador, guardar para el día
                     if (result.hunterRevenge) {

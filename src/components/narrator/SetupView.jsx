@@ -3,8 +3,10 @@ import { QRCodeSVG } from 'qrcode.react'
 import { getRoleInfo } from '../../utils/roles'
 
 function SetupView({ 
-  roomCode, 
-  players, 
+  roomCode,
+  roomId,
+  players,
+  setPlayers,
   onAddPlayer, 
   onRemovePlayer, 
   onAssignRoles, 
@@ -21,9 +23,17 @@ function SetupView({
   includeHunter,
   setIncludeHunter,
   includeGirl,
-  setIncludeGirl
+  setIncludeGirl,
+  includeCupid,
+  setIncludeCupid,
+  // Cupido
+  cupidArrowsSet,
+  setCupidArrowsSet
 }) {
   const [newPlayerName, setNewPlayerName] = useState('')
+  const [showCupidSelection, setShowCupidSelection] = useState(false)
+  const [arrow1, setArrow1] = useState('')
+  const [arrow2, setArrow2] = useState('')
   
   const playerUrl = `${window.location.origin}/jugador?code=${roomCode}`
   
@@ -37,6 +47,72 @@ function SetupView({
   
   const allRolesAssigned = players.length > 0 && players.every(p => p.role)
   const sheriff = players.find(p => p.is_sheriff)
+  const cupidPlayer = players.find(p => p.role === 'cupid')
+  const hasCupidAndNeedsArrows = cupidPlayer && !cupidArrowsSet
+  
+  // Detectar cuando se asignan roles con Cupido
+  const handleAssignRoles = async () => {
+    await onAssignRoles()
+    
+    // Si hay Cupido, mostrar selector de flechados
+    if (includeCupid) {
+      setTimeout(() => {
+        const cupid = players.find(p => p.role === 'cupid')
+        if (cupid) {
+          setShowCupidSelection(true)
+        }
+      }, 500) // Esperar a que se actualicen los roles
+    }
+  }
+  
+  const handleSetCupidArrows = async () => {
+    if (!arrow1 || !arrow2) {
+      alert('Debes seleccionar 2 jugadores diferentes')
+      return
+    }
+    
+    if (arrow1 === arrow2) {
+      alert('Debes seleccionar 2 jugadores DIFERENTES')
+      return
+    }
+    
+    try {
+      const { supabase } = await import('../../lib/supabase')
+      
+      // Actualizar ambos jugadores con su pareja
+      const { error: error1 } = await supabase
+        .from('players')
+        .update({ cupid_partner_id: arrow2 })
+        .eq('id', arrow1)
+      
+      if (error1) throw error1
+      
+      const { error: error2 } = await supabase
+        .from('players')
+        .update({ cupid_partner_id: arrow1 })
+        .eq('id', arrow2)
+      
+      if (error2) throw error2
+      
+      // Actualizar estado local
+      const updatedPlayers = players.map(p => {
+        if (p.id === arrow1) return { ...p, cupid_partner_id: arrow2 }
+        if (p.id === arrow2) return { ...p, cupid_partner_id: arrow1 }
+        return p
+      })
+      
+      setPlayers(updatedPlayers)
+      setCupidArrowsSet(true)
+      setShowCupidSelection(false)
+      setArrow1('')
+      setArrow2('')
+      
+      alert('💘 Flechas de Cupido asignadas correctamente')
+    } catch (error) {
+      console.error('Error setting cupid arrows:', error)
+      alert('Error al asignar flechas de Cupido: ' + error.message)
+    }
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
@@ -210,6 +286,16 @@ function SetupView({
                     />
                     <span className="text-gray-700 font-medium">Incluir Niña 👧</span>
                   </label>
+
+                  <label className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={includeCupid}
+                      onChange={(e) => setIncludeCupid(e.target.checked)}
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <span className="text-gray-700 font-medium">Incluir Cupido 💘</span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -228,7 +314,7 @@ function SetupView({
                   Los roles se asignarán aleatoriamente según la configuración
                 </p>
                 <button
-                  onClick={onAssignRoles}
+                  onClick={handleAssignRoles}
                   disabled={players.length < 3}
                   className={`w-full py-3 px-4 rounded-lg font-bold transition-colors ${
                     players.length < 3
@@ -271,16 +357,36 @@ function SetupView({
                 </select>
               </div>
 
+              {hasCupidAndNeedsArrows && (
+                <div className="bg-pink-50 border border-pink-300 rounded-lg p-4">
+                  <h3 className="font-bold text-pink-900 mb-2">💘 Paso 3.5: Cupido debe flechar</h3>
+                  <p className="text-sm text-pink-700 mb-3">
+                    Antes de iniciar, el narrador debe preguntarle a Cupido quiénes quiere flechar (2 jugadores)
+                  </p>
+                  <button
+                    onClick={() => setShowCupidSelection(true)}
+                    className="w-full py-3 px-4 rounded-lg font-bold bg-pink-500 hover:bg-pink-600 text-white transition-colors"
+                  >
+                    💘 Seleccionar Flechados
+                  </button>
+                </div>
+              )}
+
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="font-bold text-green-900 mb-2">Paso 4: Iniciar juego</h3>
                 <p className="text-sm text-green-700 mb-3">
                   Los jugadores verán su rol asignado
                 </p>
+                {hasCupidAndNeedsArrows && (
+                  <p className="text-sm text-orange-600 font-bold mb-3">
+                    ⚠️ Primero debes asignar las flechas de Cupido
+                  </p>
+                )}
                 <button
                   onClick={onStartGame}
-                  disabled={!allRolesAssigned}
+                  disabled={!allRolesAssigned || hasCupidAndNeedsArrows}
                   className={`w-full py-3 px-4 rounded-lg font-bold transition-colors ${
-                    !allRolesAssigned
+                    !allRolesAssigned || hasCupidAndNeedsArrows
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
                   }`}
@@ -300,6 +406,112 @@ function SetupView({
           </div>
         </div>
       </div>
+
+      {/* Modal de Selección de Cupido */}
+      {showCupidSelection && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">💘</div>
+              <h2 className="text-3xl font-bold text-pink-600 mb-2">Cupido Flecha</h2>
+              <p className="text-gray-600">
+                El narrador pregunta a <strong>{cupidPlayer?.name}</strong> (Cupido) quiénes quiere flechar
+              </p>
+            </div>
+
+            <div className="bg-pink-50 border-2 border-pink-300 rounded-xl p-4 mb-6">
+              <p className="text-pink-900 text-sm mb-2">
+                <strong>📋 Instrucciones:</strong>
+              </p>
+              <ol className="list-decimal list-inside text-pink-800 text-sm space-y-1">
+                <li>El narrador pregunta a Cupido en secreto</li>
+                <li>Cupido elige 2 jugadores cualesquiera</li>
+                <li>Si uno de los flechados muere, el otro también muere</li>
+                <li>Esto solo se hace UNA VEZ al inicio del juego</li>
+              </ol>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Primera flecha 💘
+                </label>
+                <select
+                  value={arrow1}
+                  onChange={(e) => setArrow1(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-pink-300 rounded-lg focus:ring-2 focus:ring-pink-500 text-lg"
+                >
+                  <option value="">-- Seleccionar jugador --</option>
+                  {players.filter(p => p.role && p.id !== arrow2).map(player => {
+                    const roleInfo = getRoleInfo(player.role)
+                    return (
+                      <option key={player.id} value={player.id}>
+                        {player.name} ({roleInfo.emoji} {roleInfo.name})
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Segunda flecha 💘
+                </label>
+                <select
+                  value={arrow2}
+                  onChange={(e) => setArrow2(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-pink-300 rounded-lg focus:ring-2 focus:ring-pink-500 text-lg"
+                >
+                  <option value="">-- Seleccionar jugador --</option>
+                  {players.filter(p => p.role && p.id !== arrow1).map(player => {
+                    const roleInfo = getRoleInfo(player.role)
+                    return (
+                      <option key={player.id} value={player.id}>
+                        {player.name} ({roleInfo.emoji} {roleInfo.name})
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+            </div>
+
+            {arrow1 && arrow2 && (
+              <div className="bg-green-50 border border-green-300 rounded-lg p-3 mb-4 text-center">
+                <p className="text-green-800 font-medium">
+                  💘 {players.find(p => p.id === arrow1)?.name} ↔️ {players.find(p => p.id === arrow2)?.name}
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  Si uno muere, el otro también muere
+                </p>
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowCupidSelection(false)
+                  setArrow1('')
+                  setArrow2('')
+                }}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSetCupidArrows}
+                disabled={!arrow1 || !arrow2}
+                className={`flex-1 font-bold py-3 px-4 rounded-lg transition-colors ${
+                  !arrow1 || !arrow2
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-pink-500 hover:bg-pink-600 text-white'
+                }`}
+              >
+                💘 Confirmar Flechas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

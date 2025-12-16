@@ -16,6 +16,7 @@ function Player() {
   const [allPlayers, setAllPlayers] = useState([])
   const [error, setError] = useState('')
   const [roleVisible, setRoleVisible] = useState(false)
+  const [cupidPartner, setCupidPartner] = useState(null) // Pareja de Cupido
 
   // Cargar desde localStorage si existe
   useEffect(() => {
@@ -82,6 +83,19 @@ function Player() {
             .eq('id', pId)
         }
         
+        // Si tiene pareja de Cupido, buscar su nombre
+        if (data.cupid_partner_id) {
+          const { data: partner } = await supabase
+            .from('players')
+            .select('name')
+            .eq('id', data.cupid_partner_id)
+            .single()
+          
+          if (partner) {
+            setCupidPartner(partner.name)
+          }
+        }
+        
         // Obtener otros jugadores para mostrar compañeros (si es lobo)
         if (data.role === 'wolf') {
           const { data: players } = await supabase
@@ -123,6 +137,21 @@ function Player() {
         console.log('🔄 Rol actualizado:', data.role)
         setPlayerRole(data.role)
         setRoleVisible(false) // Ocultar el rol para que lo revelen de nuevo
+        
+        // Si tiene pareja de Cupido, buscar su nombre
+        if (data.cupid_partner_id) {
+          const { data: partner } = await supabase
+            .from('players')
+            .select('name')
+            .eq('id', data.cupid_partner_id)
+            .single()
+          
+          if (partner) {
+            setCupidPartner(partner.name)
+          }
+        } else {
+          setCupidPartner(null)
+        }
         
         // Actualizar otros jugadores si es lobo
         if (data.role === 'wolf') {
@@ -380,6 +409,21 @@ function Player() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* Mostrar pareja de Cupido */}
+                {cupidPartner && (
+                  <div className="bg-pink-50 border-2 border-pink-300 rounded-xl p-6 mb-6 animate-fade-in">
+                    <h3 className="font-bold text-pink-900 mb-3 text-lg">
+                      💘 Flechado por Cupido:
+                    </h3>
+                    <p className="text-pink-800 font-medium text-lg mb-2">
+                      Estás enlazado con <strong>{cupidPartner}</strong>
+                    </p>
+                    <p className="text-pink-700 text-sm">
+                      ⚠️ Si {cupidPartner} muere, tú también mueres
+                    </p>
                   </div>
                 )}
 

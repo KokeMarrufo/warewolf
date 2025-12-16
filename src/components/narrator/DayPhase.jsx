@@ -361,6 +361,7 @@ function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHu
                   <p className="text-gray-600">
                     {death.cause === 'wolves' && 'Ha sido asesinado por los lobos durante la noche'}
                     {death.cause === 'witch' && 'Ha sido envenenado por la bruja durante la noche'}
+                    {death.cause === 'cupid' && 'Ha muerto por amor (flechado por Cupido 💘)'}
                   </p>
                 </div>
               ))}
