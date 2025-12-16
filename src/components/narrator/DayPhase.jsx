@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getRoleInfo } from '../../utils/roles'
 
-function DayPhase({ players, alivePlayers, gameState, pendingHunterRevenge, onExecutePlayer, onDayEnd, onHunterRevengeComplete }) {
+function DayPhase({ players, alivePlayers, gameState, lastNightDeaths, pendingHunterRevenge, onExecutePlayer, onDayEnd, onHunterRevengeComplete }) {
   const [deathAnnounced, setDeathAnnounced] = useState(false)
   const [votingStarted, setVotingStarted] = useState(false)
   const [votes, setVotes] = useState({})
@@ -14,14 +14,8 @@ function DayPhase({ players, alivePlayers, gameState, pendingHunterRevenge, onEx
   
   const sheriff = alivePlayers.find(p => p.is_sheriff)
   
-  // Obtener las muertes de la noche anterior del historial
-  // Filtrar por ronda actual Y fase 'night' para obtener SOLO las muertes de esta noche
-  const lastNightDeaths = gameState.history
-    .filter(e => 
-      (e.type === 'wolves' || e.type === 'witch') && 
-      e.round === gameState.round && 
-      e.phase === 'night'
-    )
+  // lastNightDeaths ahora viene directamente de GameView, no del historial
+  console.log('📢 DayPhase - Muertes a anunciar:', lastNightDeaths)
   
   const handleAnnouncement = () => {
     setDeathAnnounced(true)
@@ -362,11 +356,11 @@ function DayPhase({ players, alivePlayers, gameState, pendingHunterRevenge, onEx
                 <div key={idx} className="bg-red-50 border-2 border-red-300 rounded-xl p-8 text-center">
                   <div className="text-6xl mb-4">💀</div>
                   <p className="text-2xl font-bold text-red-800 mb-2">
-                    {death.message}
+                    {death.playerName}
                   </p>
                   <p className="text-gray-600">
-                    {death.type === 'wolves' && 'Ha sido asesinado por los lobos durante la noche'}
-                    {death.type === 'witch' && 'Ha sido envenenado por la bruja durante la noche'}
+                    {death.cause === 'wolves' && 'Ha sido asesinado por los lobos durante la noche'}
+                    {death.cause === 'witch' && 'Ha sido envenenado por la bruja durante la noche'}
                   </p>
                 </div>
               ))}

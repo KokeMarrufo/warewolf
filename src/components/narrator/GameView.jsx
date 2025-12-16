@@ -7,6 +7,7 @@ import DayPhase from './DayPhase'
 function GameView({ roomCode, players, setPlayers, gameState, setGameState, nightSteps, setNightSteps, onGameEnd, onExitGame }) {
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [pendingHunterRevenge, setPendingHunterRevenge] = useState(null) // Para cazador que muere de noche
+  const [lastNightDeaths, setLastNightDeaths] = useState([]) // Muertes de la noche anterior
   
   const alivePlayers = players.filter(p => p.is_alive)
   const deadPlayers = players.filter(p => !p.is_alive)
@@ -238,9 +239,20 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                   
                   // Procesar muertes y detectar cazador
                   let hunterRevengeData = null
+                  const deathsWithNames = []
                   
                   deaths.forEach(death => {
                     const result = killPlayer(death.playerId, death.cause)
+                    
+                    // Guardar muerte con nombre para el anuncio
+                    const player = players.find(p => p.id === death.playerId)
+                    if (player) {
+                      deathsWithNames.push({
+                        playerId: death.playerId,
+                        playerName: player.name,
+                        cause: death.cause
+                      })
+                    }
                     
                     // Si murió un cazador, guardar para el día
                     if (result && result.type === 'hunter_revenge') {
@@ -248,6 +260,10 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                       hunterRevengeData = result
                     }
                   })
+                  
+                  // Guardar muertes para mostrar en el día
+                  console.log('💀 Muertes para anunciar:', deathsWithNames)
+                  setLastNightDeaths(deathsWithNames)
                   
                   // Si hubo cazador, guardarlo para mostrarlo al inicio del día
                   if (hunterRevengeData) {
@@ -263,6 +279,7 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 players={players}
                 alivePlayers={alivePlayers}
                 gameState={gameState}
+                lastNightDeaths={lastNightDeaths}
                 pendingHunterRevenge={pendingHunterRevenge}
                 onExecutePlayer={(playerId) => {
                   const result = killPlayer(playerId, 'vote')
@@ -270,6 +287,7 @@ function GameView({ roomCode, players, setPlayers, gameState, setGameState, nigh
                 }}
                 onDayEnd={() => {
                   setPendingHunterRevenge(null) // Limpiar venganza pendiente
+                  setLastNightDeaths([]) // Limpiar muertes anunciadas
                   changePhase('night')
                 }}
                 onHunterRevengeComplete={() => {
