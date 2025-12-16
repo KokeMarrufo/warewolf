@@ -1,5 +1,23 @@
 # 📝 CHANGELOG
 
+## [1.3.0] - 2025-12-16
+
+### 🎉 New Features
+- **Jugar Otra Ronda**: Permite jugar múltiples partidas con los mismos jugadores
+  - Botón "🔄 Jugar Otra Ronda" en pantalla de victoria
+  - Mantiene a los mismos jugadores en la sala
+  - Resetea roles, estado de vida y estado del juego
+  - Vuelve al setup para reasignar roles y Sheriff
+  - Ideal para sesiones de juego continuas
+  - Botón separado "🎮 Nueva Partida Completa" para empezar desde cero
+
+### ✨ Improvements
+- Mejor experiencia para sesiones de juego largas
+- No necesitas reclutar jugadores entre partidas
+- Flujo más rápido entre rondas
+
+---
+
 ## [1.2.1] - 2025-12-16
 
 ### 🐛 Bug Fixes
