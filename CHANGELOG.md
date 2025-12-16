@@ -1,5 +1,21 @@
 # 📝 CHANGELOG
 
+## [1.2.1] - 2025-12-16
+
+### 🐛 Bug Fixes
+- **Botón Salir de Sala**: Los jugadores ahora pueden salir de una sala
+  - Botón "🚪 Salir de la Sala" en pantalla de espera
+  - Botón "🚪 Salir de la Sala" en pantalla de rol
+  - Limpia localStorage al salir
+  - Permite unirse a otra sala sin recargar la página
+  - Previene que jugadores queden atrapados en sesión anterior
+
+### ✨ Improvements
+- Mejor UX cuando el narrador sale o cierra la sala
+- Los jugadores pueden cambiar de sala fácilmente
+
+---
+
 ## [1.2.0] - 2025-12-16
 
 ### 🎉 New Features
